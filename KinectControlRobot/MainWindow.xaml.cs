@@ -13,7 +13,7 @@ namespace KinectControlRobot
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
         public MainWindow()
-            : base(new Thickness(6), 24, new CornerRadius(3), new Thickness(0))
+            : base(new Thickness(0), 24, new CornerRadius(6), new Thickness(0))
         {
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
