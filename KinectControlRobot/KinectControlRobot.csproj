@@ -135,7 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Model\" />
-    <Folder Include="SampleData\SampleDataSource\SampleDataSource_Files\" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Image\Robot.png" />
