@@ -97,7 +97,7 @@ publish/
 
 # NuGet Packages Directory
 ## TODO: If you have NuGet Package Restore enabled, uncomment the next line
-#packages/
+packages/
 
 # Windows Azure Build Output
 csx
@@ -154,7 +154,9 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+
 /CustomChrome
 /Experimental
-/KinectControlRobotTest
-/packages
+/KinectControlRobot.WPF.Test
+/ExperimentalTest
+/KinectControlRobot.Application.Test

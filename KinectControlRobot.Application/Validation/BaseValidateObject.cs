@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
 using System.ComponentModel.DataAnnotations;
 
-namespace MyFriends.Validation
+namespace KinectControlRobot.Application.Validation
 {
     public abstract class BaseValidateObject : ObservableObject
     {
