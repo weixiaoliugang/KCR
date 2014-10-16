@@ -32,16 +32,28 @@
 									<VisualTransition GeneratedDuration="0"/>
 									<VisualTransition GeneratedDuration="0:0:0.3" To="MouseOver" ei:ExtendedVisualStateManager.TransitionEffect="{x:Null}"/>
 									<VisualTransition GeneratedDuration="0:0:0.3" To="Normal"/>
-									<VisualTransition GeneratedDuration="0:0:0.1" To="Pressed"/>
+									<VisualTransition From="Disabled" GeneratedDuration="0:0:0.5"/>
 								</VisualStateGroup.Transitions>
 								<VisualState x:Name="Normal"/>
 								<VisualState x:Name="MouseOver">
 									<Storyboard>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="1.05"/>
+										</DoubleAnimationUsingKeyFrames>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="1.05"/>
+										</DoubleAnimationUsingKeyFrames>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="-3"/>
+										</DoubleAnimationUsingKeyFrames>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.Y)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="-3"/>
+										</DoubleAnimationUsingKeyFrames>
 										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)" Storyboard.TargetName="regularPolygon">
-											<EasingDoubleKeyFrame KeyTime="0" Value="35"/>
+											<EasingDoubleKeyFrame KeyTime="0" Value="50"/>
 										</DoubleAnimationUsingKeyFrames>
 										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" Storyboard.TargetName="regularPolygon">
-											<EasingDoubleKeyFrame KeyTime="0" Value="0.8"/>
+											<EasingDoubleKeyFrame KeyTime="0" Value="1"/>
 										</DoubleAnimationUsingKeyFrames>
 									</Storyboard>
 								</VisualState>
@@ -59,17 +71,32 @@
 										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" Storyboard.TargetName="regularPolygon">
 											<EasingDoubleKeyFrame KeyTime="0" Value="0.3"/>
 										</DoubleAnimationUsingKeyFrames>
+										<ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)" Storyboard.TargetName="regularPolygon">
+											<EasingColorKeyFrame KeyTime="0" Value="DimGray"/>
+										</ColorAnimationUsingKeyFrames>
 									</Storyboard>
 								</VisualState>
-								<VisualState x:Name="Disabled"/>
+								<VisualState x:Name="Disabled">
+									<Storyboard>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+										</DoubleAnimationUsingKeyFrames>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Direction)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+										</DoubleAnimationUsingKeyFrames>
+										<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.ShadowDepth)" Storyboard.TargetName="regularPolygon">
+											<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+										</DoubleAnimationUsingKeyFrames>
+									</Storyboard>
+								</VisualState>
 							</VisualStateGroup>
 						</VisualStateManager.VisualStateGroups>
 						<VisualStateManager.CustomVisualStateManager>
 							<ei:ExtendedVisualStateManager/>
 						</VisualStateManager.CustomVisualStateManager>
-						<ed:RegularPolygon x:Name="regularPolygon" HorizontalAlignment="Right" Height="177" InnerRadius="1" PointCount="3" Stretch="Fill" VerticalAlignment="Bottom" Width="354" RenderTransformOrigin="0.5,0.5" Canvas.Left="11" Canvas.Top="99.465" Fill="{Binding ButtonColor}">
+						<ed:RegularPolygon x:Name="regularPolygon" HorizontalAlignment="Right" Height="177" InnerRadius="1" PointCount="3" Stretch="Fill" VerticalAlignment="Bottom" Width="354" RenderTransformOrigin="0.5,0.5" Canvas.Left="11" Canvas.Top="99.465" Fill="#FF3A3A3A">
 							<ed:RegularPolygon.Effect>
-								<DropShadowEffect BlurRadius="20" Direction="275" Opacity="0.6"/>
+								<DropShadowEffect BlurRadius="30" Direction="275" Opacity="0.85" ShadowDepth="3"/>
 							</ed:RegularPolygon.Effect>
 							<ed:RegularPolygon.RenderTransform>
 								<TransformGroup>
@@ -80,17 +107,12 @@
 								</TransformGroup>
 							</ed:RegularPolygon.RenderTransform>
 						</ed:RegularPolygon>
-						<TextBlock TextWrapping="Wrap" Text="{Binding ButtonString}" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="130" Canvas.Top="150" FontSize="48" Foreground="#FF3399FF" FontWeight="Bold">
+						<TextBlock TextWrapping="Wrap" Text="{Binding ButtonString}" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="130" Canvas.Top="150" FontSize="48" Foreground="#FF66B034" FontWeight="Bold">
 							<TextBlock.Effect>
 								<DropShadowEffect Direction="0" ShadowDepth="0" Color="{DynamicResource {x:Static SystemColors.GrayTextColorKey}}" Opacity="0.6" BlurRadius="15"/>
 							</TextBlock.Effect>
 						</TextBlock>
 					</Canvas>
-					<ControlTemplate.Triggers>
-						<Trigger Property="IsPressed" Value="True">
-							<Setter Property="Fill" TargetName="regularPolygon" Value="{Binding ButtonPressedColor}"/>
-						</Trigger>
-					</ControlTemplate.Triggers>
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>

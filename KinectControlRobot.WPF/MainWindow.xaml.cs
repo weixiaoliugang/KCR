@@ -1,8 +1,8 @@
 ﻿using System.Windows;
-using KinectControlRobot.ViewModel;
+using KinectControlRobot.Application.ViewModel;
 using CustomChrome;
 
-namespace KinectControlRobot
+namespace KinectControlRobot.WPF
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
