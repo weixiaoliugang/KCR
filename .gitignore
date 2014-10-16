@@ -158,3 +158,6 @@ $RECYCLE.BIN/
 /CustomChrome
 /Experimental
 /KinectControlRobotTest
+/ExperimentalTest
+/KinectControlRobot.Application.Test
+/KinectControlRobot.WPF.Test
