@@ -12,8 +12,13 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
+<<<<<<< HEAD:KinectControlRobot.Application/ViewModel/ViewModelLocator.cs
 using KinectControlRobot.Application.Interface;
 using KinectControlRobot.Application.Service;
+=======
+using KinectControlRobot.Interface;
+using KinectControlRobot.Service;
+>>>>>>> master:KinectControlRobot/ViewModel/ViewModelLocator.cs
 
 namespace KinectControlRobot.Application.ViewModel
 {
@@ -30,6 +35,7 @@ namespace KinectControlRobot.Application.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
+            SimpleIoc.Default.Register<IKinectService, KinectService>();
             SimpleIoc.Default.Register<MainViewModel>();
         }
 
