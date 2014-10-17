@@ -7,12 +7,13 @@ using System.Collections.ObjectModel;
 using Microsoft.Kinect;
 using System.Windows;
 using GalaSoft.MvvmLight.Threading;
-using System.Threading;
+using System.Timers;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Ioc;
 using System.Linq;
 using System;
 using Coding4Fun.Kinect.Wpf;
+using GalaSoft.MvvmLight.Command;
 
 namespace KinectControlRobot.Application.ViewModel
 {
@@ -29,11 +30,29 @@ namespace KinectControlRobot.Application.ViewModel
 
         private IMCUService _mcuService;
 
+        private bool _isReady = false;
+        private bool _isWorking = false;
+
 #if DEBUG
+        public MainViewModel(IKinectService kinectService, IMCUService mcuService)
+        {
+            _kinectService = kinectService;
+            _mcuService = mcuService;
+
+            CameraShadowColor = "#FF66B034";
+            StatusColor = "#FF66B034";
+            StatusCaption = "系统就绪";
+            StatusDescription = "可以开始准备了";
+            ButtonString = "准备";
+
+            _isReady = true;
+
+            BeginCheckMCUStatus(200);
+        }
 #endif
 
         [PreferredConstructor]
-        public MainViewModel(IKinectService kinectService, IMCUService mcuService)
+        public MainViewModel()
         {
             Initialize();
         }
@@ -44,32 +63,48 @@ namespace KinectControlRobot.Application.ViewModel
             {
                 Parallel.Invoke(() =>
                 {
-                    _kinectService = new KinectService(() =>
+                    KinectSensor kinectSensor = null;
+
+                    // while haven't got the sensor, keep fetching
+                    while (kinectSensor == null)
                     {
-                        StatusDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
-                    });
+                        System.Threading.Thread.Sleep(200);
+                        kinectSensor = (from sensor in KinectSensor.KinectSensors
+                                        where sensor.Status == KinectStatus.Connected
+                                        select sensor).FirstOrDefault();
+                    }
+
+                    _kinectService = new KinectService(kinectSensor);
                     _kinectService.SetupKinectSensor(new EventHandler<ColorImageFrameReadyEventArgs>(ColorImageFrameReadyEventHandler),
                         new EventHandler<SkeletonFrameReadyEventArgs>(SkeletonFrameReadyEventHandler));
+
+                    StatusDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
                 }, () =>
                 {
-                    _mcuService = new MCUService(() =>
+                    IMCU mcu = null;
+
+                    while (mcu == null)
                     {
-                        StatusDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
-                    });
+                        System.Threading.Thread.Sleep(200);
+                    }
+
+                    _mcuService = new MCUService(mcu);
+
+                    StatusDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
+
+                    BeginCheckMCUStatus(200);
                 });
 
                 CameraShadowColor = "#FF66B034";
                 StatusColor = "#FF66B034";
-                StatusCaption = "准备就绪";
-                StatusDescription = "可以开始工作了";
+                StatusCaption = "系统就绪";
+                StatusDescription = "可以开始准备了";
                 ButtonString = "准备";
+
+                _isReady = true;
             });
         }
 
-        /// <summary>
-        /// Initializes a new instance of the MainViewModel class.
-        /// </summary>
-        public MainViewModel() { }
 
         #region KinectEventHandlers
 
@@ -539,6 +574,52 @@ namespace KinectControlRobot.Application.ViewModel
 
         #endregion
 
+        #region RelayCommands
+
+        private RelayCommand _workCommand;
+
+        /// <summary>
+        /// Gets the WorkCommand.
+        /// </summary>
+        public RelayCommand WorkCommand
+        {
+            get
+            {
+                return _workCommand
+                    ?? (_workCommand = new RelayCommand(
+                    () =>
+                    {
+                        if (!WorkCommand.CanExecute(null))
+                        {
+                            return;
+                        }
+
+                        if (_isWorking)
+                        {
+                            StatusCaption = "系统就绪";
+                            StatusDescription = "可以开始准备了";
+
+                            ButtonString = "准备";
+                            _isWorking = false;
+
+                            // TODO: stop work here
+                        }
+                        else
+                        {
+                            StatusCaption = "正在工作";
+                            StatusDescription = "系统正常运行";
+
+                            ButtonString = "停止";
+                            _isWorking = true;
+
+                            // TODO: start work here
+                        }
+                    },
+                    () => _isReady));
+            }
+        }
+        #endregion
+
         public override void Cleanup()
         {
             // Clean up if needed
@@ -548,9 +629,37 @@ namespace KinectControlRobot.Application.ViewModel
             base.Cleanup();
         }
 
-        public void BeginCheckMCUStatus(int interval)
+        private void BeginCheckMCUStatus(double interval)
         {
-            throw new NotImplementedException();
+            Timer checkStatusTimer = new Timer(interval);
+            checkStatusTimer.Elapsed += new ElapsedEventHandler((o, e) =>
+            {
+                switch (_mcuService.CheckMCUStatus())
+                {
+                    case MCUStatus.DisConnected:
+                        StatusColor = "#FF3A3A3A";
+                        CameraShadowColor = "#FF3A3A3A";
+                        StatusCaption = "连接断开";
+                        StatusDescription = "程序正在尝试重新连接。。。";
+                        StatusHelperString = "请检查下位机故障";
+
+                        _isWorking = false;
+                        _isReady = false;
+
+                        // TODO: try to connect MCU and then set _isReady to true in background thread
+                        break;
+                    case MCUStatus.SystemAbnormal:
+                        StatusColor = "#FF3A3A3A";
+                        StatusCaption = "系统异常";
+                        StatusDescription = "下位机出现异常";
+                        StatusHelperString = "请检查下位机故障";
+
+                        _isWorking = false;
+                        _isReady = false;
+                        break;
+                }
+            });
+            checkStatusTimer.Start();
         }
     }
 }

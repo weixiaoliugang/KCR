@@ -11,6 +11,7 @@ namespace KinectControlRobot.Application.Interface
 
     public enum MCUStatus
     {
+        DisConnected,
         SystemNormal,
         SystemAbnormal,
         Working,

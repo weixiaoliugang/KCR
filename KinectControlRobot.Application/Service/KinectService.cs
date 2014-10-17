@@ -8,25 +8,18 @@ using System.Threading;
 
 namespace KinectControlRobot.Application.Service
 {
-    public class KinectService:IKinectService
+    public class KinectService : IKinectService
     {
-        public KinectSensor CurrentKinectSensor { get; private set; }
+        private readonly KinectSensor _currentKinectSensor;
 
-        public KinectService(Action callbackAction)
+        public KinectSensor CurrentKinectSensor { get { return _currentKinectSensor; } }
+
+        public KinectService(KinectSensor kinectSensor)
         {
-            // while haven't got the sensor, keep fetching
-            while (CurrentKinectSensor == null)
-            {
-                Thread.Sleep(200);
-                CurrentKinectSensor = (from sensor in KinectSensor.KinectSensors
-                                 where sensor.Status == KinectStatus.Connected
-                                 select sensor).FirstOrDefault();
-            }
-
-            callbackAction.Invoke();
+            _currentKinectSensor = kinectSensor;
         }
 
-        public void SetupKinectSensor(EventHandler<ColorImageFrameReadyEventArgs> colorImageFreamReadyEventHandler, 
+        public void SetupKinectSensor(EventHandler<ColorImageFrameReadyEventArgs> colorImageFreamReadyEventHandler,
             EventHandler<SkeletonFrameReadyEventArgs> skeletonFrameReadyEventHandler)
         {
             // Setup kinect streams info
