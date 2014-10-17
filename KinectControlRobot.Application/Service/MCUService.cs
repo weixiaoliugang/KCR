@@ -6,15 +6,15 @@ using KinectControlRobot.Application.Interface;
 
 namespace KinectControlRobot.Application.Service
 {
-    class MCUService:IMCUService
+    public class MCUService : IMCUService
     {
-        public IMCU CurrentMCU { get; private set; }
+        private readonly IMCU _currentMCU;
 
-        public MCUService(Action callbackAction)
+        public IMCU CurrentMCU { get { return _currentMCU; } }
+
+        public MCUService(IMCU mcu)
         {
-            throw new NotImplementedException();
-
-            callbackAction.Invoke();
+            _currentMCU = mcu;
         }
 
         public MCUStatus CheckMCUStatus()
@@ -24,7 +24,6 @@ namespace KinectControlRobot.Application.Service
 
         public void StopMCU()
         {
-            throw new NotImplementedException();
         }
     }
 }

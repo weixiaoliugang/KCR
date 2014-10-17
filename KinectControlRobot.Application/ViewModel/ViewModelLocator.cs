@@ -30,7 +30,6 @@ namespace KinectControlRobot.Application.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-            SimpleIoc.Default.Register<IKinectService, KinectService>();
             SimpleIoc.Default.Register<MainViewModel>();
         }
 
