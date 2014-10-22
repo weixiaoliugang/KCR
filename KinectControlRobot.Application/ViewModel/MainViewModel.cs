@@ -59,16 +59,16 @@ namespace KinectControlRobot.Application.ViewModel
         [PreferredConstructor]
         public MainViewModel()
         {
-            Initialize();
+            _Initialize();
         }
 
-        private void Initialize()
+        private void _Initialize()
         {
             Messenger.Default.Register<KinectServiceReadyMessage>(this, (msg) =>
                 {
                     DispatcherHelper.CheckBeginInvokeOnUI(() =>
                     {
-                        _kinectService.RegisterColorImageFrameReadyEvent(ColorImageFrameReadyEventHandler);
+                        _kinectService.RegisterColorImageFrameReadyEvent(_ColorImageFrameReadyEventHandler);
                         _kinectService.StartKinectSensor();
                     });
                 });
@@ -106,12 +106,12 @@ namespace KinectControlRobot.Application.ViewModel
 
         #region EventHandler
 
-        private void MCUStatusChangedEventHandler(MCUStatus mcuStatus)
+        private void _MCUStatusChangedEventHandler(MCUStatus mcuStatus)
         {
             switch (mcuStatus)
             {
                 case MCUStatus.DisConnected:
-                    ChangeOnMCUError();
+                    _ChangeOnMCUError();
 
                     CameraShadowColor = "#FF3A3A3A";
                     StatusCaption = "连接断开";
@@ -139,7 +139,7 @@ namespace KinectControlRobot.Application.ViewModel
                         });
                     break;
                 case MCUStatus.SystemAbnormal:
-                    ChangeOnMCUError();
+                    _ChangeOnMCUError();
 
                     StatusCaption = "系统异常";
                     StatusDescription = "下位机出现异常";
@@ -147,7 +147,7 @@ namespace KinectControlRobot.Application.ViewModel
                 case MCUStatus.Working:
                     if (!_isWorking)
                     {
-                        ChangeOnMCUError();
+                        _ChangeOnMCUError();
 
                         StatusCaption = "系统异常";
                         StatusDescription = "下位机报告仍在工作";
@@ -156,7 +156,7 @@ namespace KinectControlRobot.Application.ViewModel
             }
         }
 
-        private void ChangeOnMCUError()
+        private void _ChangeOnMCUError()
         {
             StatusColor = "#FF3A3A3A";
             StatusHelperString = "请检查下位机故障";
@@ -165,7 +165,7 @@ namespace KinectControlRobot.Application.ViewModel
             _isReady = false;
         }
 
-        private void ColorImageFrameReadyEventHandler(object sender, ColorImageFrameReadyEventArgs e)
+        private void _ColorImageFrameReadyEventHandler(object sender, ColorImageFrameReadyEventArgs e)
         {
             using (ColorImageFrame imageFrame = e.OpenColorImageFrame())
             {
@@ -179,7 +179,7 @@ namespace KinectControlRobot.Application.ViewModel
             }
         }
 
-        private void SkeletonFrameReadyEventHandler(object sender, SkeletonFrameReadyEventArgs e)
+        private void _SkeletonFrameReadyEventHandler(object sender, SkeletonFrameReadyEventArgs e)
         {
             using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
             {

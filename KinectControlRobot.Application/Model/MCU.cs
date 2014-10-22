@@ -11,14 +11,14 @@ namespace KinectControlRobot.Application.Model
     {
         public MCUStatus Status
         {
-            get { return CheckStatus(); }
+            get { return _CheckStatus(); }
         }
 
         public MCU()
         {
         }
 
-        private MCUStatus CheckStatus()
+        private MCUStatus _CheckStatus()
         {
             throw new NotImplementedException();
         }

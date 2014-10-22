@@ -30,7 +30,7 @@ namespace KinectControlRobot.Application.Service
             }
         }
 
-        private void CheckCanExecute()
+        private void _CheckCanExecute()
         {
             if (_currentKinectSensor == null || _currentKinectSensor.Status != KinectStatus.Connected)
             {
@@ -48,35 +48,35 @@ namespace KinectControlRobot.Application.Service
 
         public void RegisterColorImageFrameReadyEvent(EventHandler<ColorImageFrameReadyEventArgs> handler)
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             _currentKinectSensor.ColorFrameReady += handler;
         }
 
         public void RegisterDepthImageFrameReadyEvent(EventHandler<DepthImageFrameReadyEventArgs> handler)
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             _currentKinectSensor.DepthFrameReady += handler;
         }
 
         public void RegisterSkeletonFrameReadyEvent(EventHandler<SkeletonFrameReadyEventArgs> handler)
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             _currentKinectSensor.SkeletonFrameReady += handler;
         }
 
         public void RegisterAllFrameReadyEvent(EventHandler<AllFramesReadyEventArgs> handler)
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             _currentKinectSensor.AllFramesReady += handler;
         }
 
         public void SetupKinectSensor(ColorImageFormat colorImageFormat, DepthImageFormat depthImageFormat)
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             // Setup kinect streams info
             _currentKinectSensor.ColorStream.Enable(colorImageFormat);
@@ -100,14 +100,14 @@ namespace KinectControlRobot.Application.Service
 
         public void StartKinectSensor()
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             _currentKinectSensor.Start();
         }
 
         public void StopKinectSensor()
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             _currentKinectSensor.Stop();
         }

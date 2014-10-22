@@ -83,6 +83,7 @@
     <Compile Include="Service\KinectService.cs" />
     <Compile Include="Service\MCUService.cs" />
     <Compile Include="Validation\BaseValidateObject.cs" />
+    <Compile Include="Validation\CRCTool.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
   </ItemGroup>

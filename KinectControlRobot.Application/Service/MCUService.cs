@@ -32,7 +32,7 @@ namespace KinectControlRobot.Application.Service
             }
         }
 
-        private void CheckCanExecute()
+        private void _CheckCanExecute()
         {
             if (_currentMCU == null || _currentMCU.Status != MCUStatus.SystemNormal)
             {
@@ -50,9 +50,9 @@ namespace KinectControlRobot.Application.Service
             CurrentMCU = mcu;
         }
 
-        private void StartQueryMCUStatus()
+        private void _StartQueryMCUStatus()
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             Timer checkStatusTimer = new Timer(200);
             checkStatusTimer.Elapsed += new ElapsedEventHandler((o, e) =>
@@ -74,21 +74,21 @@ namespace KinectControlRobot.Application.Service
 
         public void StartMCU()
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             throw new NotImplementedException();
         }
 
         public void ResetMCU()
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             throw new NotImplementedException();
         }
 
         public void StopMCU()
         {
-            CheckCanExecute();
+            _CheckCanExecute();
 
             throw new NotImplementedException();
         }
@@ -105,7 +105,7 @@ namespace KinectControlRobot.Application.Service
                 }
 
                 _lastStatus = _currentMCU.Status;
-                StartQueryMCUStatus();
+                _StartQueryMCUStatus();
             }
         }
 
