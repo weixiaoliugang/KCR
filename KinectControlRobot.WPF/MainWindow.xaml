@@ -153,36 +153,10 @@
 			<Border.Effect>
 				<DropShadowEffect Color="{Binding CameraShadowColor}" ShadowDepth="0" BlurRadius="30" Direction="0"/>
 			</Border.Effect>
-			<Image x:Name="Camera" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" Stretch="Fill" Margin="1" Source="{Binding Camera}"/>
+			<Image x:Name="KinectView" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" Stretch="Fill" Margin="1" Source="{Binding ViewImage}"/>
 		</Border>
-		<Canvas HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" Grid.Row="1" Margin="10,10,0,0">
-			<Polyline x:Name="HeadPolyline" Stroke="#FF0FDA90" StrokeThickness="5" Points="{Binding HeadPoints}" />
-			<Polyline x:Name="LeftHandPolyline" Stroke="#FF0FDA90" StrokeThickness="5" Points="{Binding LeftHandPoints}" />
-			<Polyline x:Name="RightHandPolyline" Stroke="#FF0FDA90" StrokeThickness="5" Points="{Binding RightHandPoints}" />
-			<Polyline x:Name="LeftFootPolyline" Stroke="#FF0FDA90" StrokeThickness="5" Points="{Binding LeftFootPoints}" />
-			<Polyline x:Name="RightFootPolyline" Stroke="#FF0FDA90" StrokeThickness="5" Points="{Binding RightFootPoints}" />
-			<Ellipse x:Name="headPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[0].Position.X}" Canvas.Top="{Binding SkeletonJoints[0].Position.Y}" />
-			<Ellipse x:Name="shoulderCenterPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[1].Position.X}" Canvas.Top="{Binding SkeletonJoints[1].Position.Y}" />
-			<Ellipse x:Name="leftShoulderPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Top="{Binding SkeletonJoints[2].Position.Y}" Canvas.Left="{Binding SkeletonJoints[2].Position.X}" />
-			<Ellipse x:Name="rightShoulderPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[3].Position.X}" Canvas.Top="{Binding SkeletonJoints[3].Position.Y}" />
-			<Ellipse x:Name="leftElbowPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[4].Position.X}" Canvas.Top="{Binding SkeletonJoints[4].Position.Y}" />
-			<Ellipse x:Name="rightElbowPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[5].Position.X}" Canvas.Top="{Binding SkeletonJoints[5].Position.Y}" />
-			<Ellipse x:Name="leftWristPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[6].Position.X}" Canvas.Top="{Binding SkeletonJoints[6].Position.Y}" />
-			<Ellipse x:Name="rightWristPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[7].Position.X}" Canvas.Top="{Binding SkeletonJoints[7].Position.Y}" />
-			<Ellipse x:Name="leftHandPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[8].Position.X}" Canvas.Top="{Binding SkeletonJoints[8].Position.Y}" />
-			<Ellipse x:Name="rightHandPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[9].Position.X}" Canvas.Top="{Binding SkeletonJoints[9].Position.Y}" />
-			<Ellipse x:Name="SpinePoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[10].Position.X}" Canvas.Top="{Binding SkeletonJoints[10].Position.Y}" />
-			<Ellipse x:Name="hipCenterPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[11].Position.X}" Canvas.Top="{Binding SkeletonJoints[11].Position.Y}" />
-			<Ellipse x:Name="leftHipPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[12].Position.X}" Canvas.Top="{Binding SkeletonJoints[12].Position.Y}" />
-			<Ellipse x:Name="rightHipPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[13].Position.X}" Canvas.Top="{Binding SkeletonJoints[13].Position.Y}" />
-			<Ellipse x:Name="leftKneePoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[14].Position.X}" Canvas.Top="{Binding SkeletonJoints[14].Position.Y}" />
-			<Ellipse x:Name="rightKneePoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[15].Position.X}" Canvas.Top="{Binding SkeletonJoints[15].Position.Y}" />
-			<Ellipse x:Name="leftAnklePoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[16].Position.X}" Canvas.Top="{Binding SkeletonJoints[16].Position.Y}" />
-			<Ellipse x:Name="rightAnklePoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[17].Position.X}" Canvas.Top="{Binding SkeletonJoints[17].Position.Y}" />
-			<Ellipse x:Name="leftFootPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[18].Position.X}" Canvas.Top="{Binding SkeletonJoints[18].Position.Y}" />
-			<Ellipse x:Name="rightFootPoint" Fill="#FFC75050" Height="15" Width="15" Canvas.Left="{Binding SkeletonJoints[19].Position.X}" Canvas.Top="{Binding SkeletonJoints[19].Position.Y}" />
-			</Canvas>
-		<Canvas x:Name="Status" Height="150" VerticalAlignment="Bottom" Margin="60,0,60,20" Grid.Row="1">
+		<Canvas x:Name="SkeletonCanvas" HorizontalAlignment="Left" Height="480" VerticalAlignment="Top" Width="640" Grid.Row="1" Margin="10,10,0,0" />
+			<Canvas x:Name="Status" Height="150" VerticalAlignment="Bottom" Margin="60,0,60,20" Grid.Row="1">
 			<Rectangle x:Name="rectangle" Fill="{Binding StatusColor}" HorizontalAlignment="Left" Width="150" Canvas.Left="0" Canvas.Top="0" Margin="0" VerticalAlignment="Top" Height="150" RadiusX="9" RadiusY="9" RenderTransformOrigin="0.5,0.5">
 				<Rectangle.RenderTransform>
 					<TransformGroup>
@@ -197,7 +171,7 @@
 			<TextBlock TextWrapping="Wrap" Text="{Binding StatusDescription}" Canvas.Left="0" Canvas.Top="0" Margin="165,105,0,0" TextDecorations="Underline" FontSize="14.667"/>
 			<TextBlock TextWrapping="Wrap" Text="{Binding StatusHelperString}" Canvas.Left="0" Canvas.Top="0" Margin="165,125,0,0" FontSize="13.333" FontStyle="Italic"/>
 		</Canvas>
-		<Button x:Name="button" Content="Button" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="250" Grid.Column="1" Margin="0,0,0,-1" Grid.Row="1" Height="251" Style="{DynamicResource ButtonStyle}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}"/>
+		<Button x:Name="button" Content="Button" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="250" Grid.Column="1" Margin="0,0,0,-1" Grid.Row="1" Height="251" Style="{DynamicResource ButtonStyle}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}" Command="{Binding WorkCommand,Mode=OneWay}"/>
 		<cc:CustomChromeControl HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0" Grid.Column="1"/>
 
 	</Grid>

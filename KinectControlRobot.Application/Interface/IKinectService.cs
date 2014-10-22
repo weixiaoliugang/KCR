@@ -8,10 +8,25 @@ namespace KinectControlRobot.Application.Interface
 {
     public interface IKinectService
     {
-        KinectSensor CurrentKinectSensor { get; }
+        KinectSensor CurrentKinectSensor { get; set; }
 
-        void SetupKinectSensor(EventHandler<ColorImageFrameReadyEventArgs> colorImageFreamReadyEventHandler,
-            EventHandler<SkeletonFrameReadyEventArgs> skeletonFrameReadyEventHandler);
+        void RegisterColorImageFrameReadyEvent(EventHandler<ColorImageFrameReadyEventArgs> handler);
+
+        void RegisterDepthImageFrameReadyEvent(EventHandler<DepthImageFrameReadyEventArgs> handler);
+
+        void RegisterSkeletonFrameReadyEvent(EventHandler<SkeletonFrameReadyEventArgs> handler);
+
+        void RegisterAllFrameReadyEvent(EventHandler<AllFramesReadyEventArgs> handler);
+
+        void SetupKinectSensor(ColorImageFormat colorImageFormat, DepthImageFormat depthImageFormat);
+
+        void Initialize();
+
+        void InitializeAsynchronous();
+
+        void Close();
+
+        void StartKinectSensor();
 
         void StopKinectSensor();
     }

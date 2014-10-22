@@ -5,41 +5,136 @@ using System.Text;
 using KinectControlRobot.Application.Interface;
 using Microsoft.Kinect;
 using System.Threading;
+using System.Threading.Tasks;
+using GalaSoft.MvvmLight.Ioc;
 
 namespace KinectControlRobot.Application.Service
 {
     public class KinectService : IKinectService
     {
-        private readonly KinectSensor _currentKinectSensor;
+        private KinectSensor _currentKinectSensor;
 
-        public KinectSensor CurrentKinectSensor { get { return _currentKinectSensor; } }
+        public KinectSensor CurrentKinectSensor
+        {
+            get { return _currentKinectSensor; }
+            set
+            {
+                if (value is KinectSensor)
+                {
+                    _currentKinectSensor = value;
+                }
+                else
+                {
+                    throw new ArgumentException();
+                }
+            }
+        }
+
+        private void CheckCanExecute()
+        {
+            if (_currentKinectSensor == null || _currentKinectSensor.Status != KinectStatus.Connected)
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        [PreferredConstructor]
+        public KinectService() { }
 
         public KinectService(KinectSensor kinectSensor)
         {
-            _currentKinectSensor = kinectSensor;
+            CurrentKinectSensor = kinectSensor;
         }
 
-        public void SetupKinectSensor(EventHandler<ColorImageFrameReadyEventArgs> colorImageFreamReadyEventHandler,
-            EventHandler<SkeletonFrameReadyEventArgs> skeletonFrameReadyEventHandler)
+        public void RegisterColorImageFrameReadyEvent(EventHandler<ColorImageFrameReadyEventArgs> handler)
         {
-            // Setup kinect streams info
-            CurrentKinectSensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
-            CurrentKinectSensor.ColorFrameReady += colorImageFreamReadyEventHandler;
+            CheckCanExecute();
 
-            CurrentKinectSensor.SkeletonStream.Enable();
-            CurrentKinectSensor.SkeletonFrameReady += skeletonFrameReadyEventHandler;
+            _currentKinectSensor.ColorFrameReady += handler;
+        }
+
+        public void RegisterDepthImageFrameReadyEvent(EventHandler<DepthImageFrameReadyEventArgs> handler)
+        {
+            CheckCanExecute();
+
+            _currentKinectSensor.DepthFrameReady += handler;
+        }
+
+        public void RegisterSkeletonFrameReadyEvent(EventHandler<SkeletonFrameReadyEventArgs> handler)
+        {
+            CheckCanExecute();
+
+            _currentKinectSensor.SkeletonFrameReady += handler;
+        }
+
+        public void RegisterAllFrameReadyEvent(EventHandler<AllFramesReadyEventArgs> handler)
+        {
+            CheckCanExecute();
+
+            _currentKinectSensor.AllFramesReady += handler;
+        }
+
+        public void SetupKinectSensor(ColorImageFormat colorImageFormat, DepthImageFormat depthImageFormat)
+        {
+            CheckCanExecute();
+
+            // Setup kinect streams info
+            _currentKinectSensor.ColorStream.Enable(colorImageFormat);
+            _currentKinectSensor.DepthStream.Enable(depthImageFormat);
+            _currentKinectSensor.SkeletonStream.Enable(new TransformSmoothParameters
+            {
+                Smoothing = 0.5f,
+                Correction = 0.5f,
+                Prediction = 0.5f,
+                JitterRadius = 0.05f,
+                MaxDeviationRadius = 0.04f
+            });
 
             // setup kinect audiosource info
-            CurrentKinectSensor.AudioSource.BeamAngleMode = BeamAngleMode.Adaptive;
-            CurrentKinectSensor.AudioSource.NoiseSuppression = true;
-            CurrentKinectSensor.AudioSource.EchoCancellationMode = EchoCancellationMode.CancellationOnly;
-            CurrentKinectSensor.AudioSource.AutomaticGainControlEnabled = false;
-            CurrentKinectSensor.AudioSource.EchoCancellationSpeakerIndex = 0;
+            _currentKinectSensor.AudioSource.BeamAngleMode = BeamAngleMode.Adaptive;
+            _currentKinectSensor.AudioSource.NoiseSuppression = true;
+            _currentKinectSensor.AudioSource.EchoCancellationMode = EchoCancellationMode.CancellationOnly;
+            _currentKinectSensor.AudioSource.AutomaticGainControlEnabled = false;
+            _currentKinectSensor.AudioSource.EchoCancellationSpeakerIndex = 0;
+        }
+
+        public void StartKinectSensor()
+        {
+            CheckCanExecute();
+
+            _currentKinectSensor.Start();
         }
 
         public void StopKinectSensor()
         {
-            CurrentKinectSensor.Stop();
+            CheckCanExecute();
+
+            _currentKinectSensor.Stop();
+        }
+
+        public void Initialize()
+        {
+            // while haven't got the sensor, keep fetching
+            while (_currentKinectSensor == null)
+            {
+                System.Threading.Thread.Sleep(200);
+                _currentKinectSensor = (from sensor in KinectSensor.KinectSensors
+                                        where sensor.Status == KinectStatus.Connected
+                                        select sensor).FirstOrDefault();
+            }
+        }
+
+        public void InitializeAsynchronous()
+        {
+            Task.Factory.StartNew(() =>
+                {
+                    Initialize();
+                });
+        }
+
+        public void Close()
+        {
+            _currentKinectSensor = null;
         }
     }
 }

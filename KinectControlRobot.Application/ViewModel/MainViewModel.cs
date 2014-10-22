@@ -14,6 +14,11 @@ using System.Linq;
 using System;
 using Coding4Fun.Kinect.Wpf;
 using GalaSoft.MvvmLight.Command;
+using Microsoft.Practices.ServiceLocation;
+using System.Collections.Generic;
+using System.Windows.Controls;
+using GalaSoft.MvvmLight.Messaging;
+using KinectControlRobot.Application.Message;
 
 namespace KinectControlRobot.Application.ViewModel
 {
@@ -26,7 +31,9 @@ namespace KinectControlRobot.Application.ViewModel
     public class MainViewModel : ViewModelBase
     {
         private IKinectService _kinectService;
-        private Int32Rect _rect = new Int32Rect(0, 0, 640, 480);
+        private byte[] _pixelData;
+        private Skeleton[] _skeletonData;
+        private readonly Int32Rect _rect = new Int32Rect(0, 0, 640, 480);
 
         private IMCUService _mcuService;
 
@@ -46,8 +53,6 @@ namespace KinectControlRobot.Application.ViewModel
             ButtonString = "准备";
 
             _isReady = true;
-
-            BeginCheckMCUStatus(200);
         }
 #endif
 
@@ -59,40 +64,34 @@ namespace KinectControlRobot.Application.ViewModel
 
         private void Initialize()
         {
+            Messenger.Default.Register<KinectServiceReadyMessage>(this, (msg) =>
+                {
+                    DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                    {
+                        _kinectService.RegisterColorImageFrameReadyEvent(ColorImageFrameReadyEventHandler);
+                        _kinectService.StartKinectSensor();
+                    });
+                });
+
             Task.Factory.StartNew(() =>
             {
                 Parallel.Invoke(() =>
                 {
-                    KinectSensor kinectSensor = null;
+                    _kinectService = ServiceLocator.Current.GetInstance<IKinectService>();
+                    _kinectService.Initialize();
+                    _kinectService.SetupKinectSensor(ColorImageFormat.RgbResolution640x480Fps30,
+                        DepthImageFormat.Resolution640x480Fps30);
 
-                    // while haven't got the sensor, keep fetching
-                    while (kinectSensor == null)
-                    {
-                        System.Threading.Thread.Sleep(200);
-                        kinectSensor = (from sensor in KinectSensor.KinectSensors
-                                        where sensor.Status == KinectStatus.Connected
-                                        select sensor).FirstOrDefault();
-                    }
-
-                    _kinectService = new KinectService(kinectSensor);
-                    _kinectService.SetupKinectSensor(new EventHandler<ColorImageFrameReadyEventArgs>(ColorImageFrameReadyEventHandler),
-                        new EventHandler<SkeletonFrameReadyEventArgs>(SkeletonFrameReadyEventHandler));
+                    Messenger.Default.Send(new KinectServiceReadyMessage(_kinectService));
 
                     StatusDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
                 }, () =>
                 {
-                    IMCU mcu = null;
+                    //_mcuService = ServiceLocator.Current.GetInstance<IMCUService>();
+                    //_mcuService.Initialize();
+                    //_mcuService.MCUStatusChanged += MCUStatusChangedEventHandler;
 
-                    while (mcu == null)
-                    {
-                        System.Threading.Thread.Sleep(200);
-                    }
-
-                    _mcuService = new MCUService(mcu);
-
-                    StatusDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
-
-                    BeginCheckMCUStatus(200);
+                    //StatusDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
                 });
 
                 CameraShadowColor = "#FF66B034";
@@ -105,8 +104,66 @@ namespace KinectControlRobot.Application.ViewModel
             });
         }
 
+        #region EventHandler
 
-        #region KinectEventHandlers
+        private void MCUStatusChangedEventHandler(MCUStatus mcuStatus)
+        {
+            switch (mcuStatus)
+            {
+                case MCUStatus.DisConnected:
+                    ChangeOnMCUError();
+
+                    CameraShadowColor = "#FF3A3A3A";
+                    StatusCaption = "连接断开";
+                    StatusDescription = "程序正在尝试重新连接。。。";
+
+                    // TODO: try to connect MCU and then set _isReady to true in background thread
+                    Task.Factory.StartNew(() =>
+                        {
+                            while (_mcuService.CurrentMCU.Status != MCUStatus.SystemNormal)
+                            {
+                                // connect mcu and reset robot
+                                System.Threading.Thread.Sleep(200);
+                                _mcuService.ResetMCU();
+                            }
+
+                            CameraShadowColor = "#FF66B034";
+                            StatusColor = "#FF66B034";
+                            StatusCaption = "系统就绪";
+                            StatusDescription = "可以开始准备了";
+                            StatusHelperString = string.Empty;
+
+                            ButtonString = "准备";
+
+                            _isReady = true;
+                        });
+                    break;
+                case MCUStatus.SystemAbnormal:
+                    ChangeOnMCUError();
+
+                    StatusCaption = "系统异常";
+                    StatusDescription = "下位机出现异常";
+                    break;
+                case MCUStatus.Working:
+                    if (!_isWorking)
+                    {
+                        ChangeOnMCUError();
+
+                        StatusCaption = "系统异常";
+                        StatusDescription = "下位机报告仍在工作";
+                    }
+                    break;
+            }
+        }
+
+        private void ChangeOnMCUError()
+        {
+            StatusColor = "#FF3A3A3A";
+            StatusHelperString = "请检查下位机故障";
+
+            _isWorking = false;
+            _isReady = false;
+        }
 
         private void ColorImageFrameReadyEventHandler(object sender, ColorImageFrameReadyEventArgs e)
         {
@@ -114,10 +171,10 @@ namespace KinectControlRobot.Application.ViewModel
             {
                 if (imageFrame != null)
                 {
-                    byte[] _pixelData = new byte[imageFrame.PixelDataLength];
+                    _pixelData = new byte[imageFrame.PixelDataLength];
                     imageFrame.CopyPixelDataTo(_pixelData);
 
-                    Camera.WritePixels(_rect, _pixelData.ToArray(), Camera.BackBufferStride, 0);
+                    ViewImage.WritePixels(_rect, _pixelData.ToArray(), ViewImage.BackBufferStride, 0);
                 }
             }
         }
@@ -128,148 +185,19 @@ namespace KinectControlRobot.Application.ViewModel
             {
                 if (skeletonFrame != null)
                 {
-                    Skeleton[] _skeletonData = new Skeleton[_kinectService.CurrentKinectSensor.SkeletonStream.FrameSkeletonArrayLength];
+                    _skeletonData = new Skeleton[_kinectService.CurrentKinectSensor.SkeletonStream.FrameSkeletonArrayLength];
                     skeletonFrame.CopySkeletonDataTo(_skeletonData);
                     Skeleton skeleton = (from ske in _skeletonData
                                          where ske.TrackingState == SkeletonTrackingState.Tracked
                                          select ske).FirstOrDefault();
                     if (skeleton != null)
                     {
-                        SetSkeletonData(skeleton);
+
                     }
                 }
             }
         }
 
-        private void SetSkeletonData(Skeleton skeleton)
-        {
-            HeadPoints.Clear();
-            LeftHandPoints.Clear();
-            RightHandPoints.Clear();
-            LeftFootPoints.Clear();
-            RightFootPoints.Clear();
-
-            Joint scaledJoint;
-
-            foreach (Joint joint in skeleton.Joints)
-            {
-                scaledJoint = SkeletalExtensions.ScaleTo(joint, 640, 480);
-
-                switch (joint.JointType)
-                {
-                    case JointType.Head:
-                        SkeletonJoints[0] = scaledJoint;
-                        HeadPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.ShoulderCenter:
-                        SkeletonJoints[1] = scaledJoint;
-                        HeadPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        LeftHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        RightHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.ShoulderLeft:
-                        SkeletonJoints[2] = scaledJoint;
-                        LeftHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.ShoulderRight:
-                        SkeletonJoints[3] = scaledJoint;
-                        RightHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.ElbowLeft:
-                        SkeletonJoints[4] = scaledJoint;
-                        LeftHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.ElbowRight:
-                        SkeletonJoints[5] = scaledJoint;
-                        RightHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.WristLeft:
-                        SkeletonJoints[6] = scaledJoint;
-                        LeftHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.WristRight:
-                        SkeletonJoints[7] = scaledJoint;
-                        RightHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.HandLeft:
-                        SkeletonJoints[8] = scaledJoint;
-                        LeftHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.HandRight:
-                        SkeletonJoints[9] = scaledJoint;
-                        RightHandPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.Spine:
-                        SkeletonJoints[10] = scaledJoint;
-                        HeadPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.HipCenter:
-                        SkeletonJoints[11] = scaledJoint;
-                        HeadPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        LeftFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        RightFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.HipLeft:
-                        SkeletonJoints[12] = scaledJoint;
-                        LeftFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.HipRight:
-                        SkeletonJoints[13] = scaledJoint;
-                        RightFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.KneeLeft:
-                        SkeletonJoints[14] = scaledJoint;
-                        LeftFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.KneeRight:
-                        SkeletonJoints[15] = scaledJoint;
-                        RightFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.AnkleLeft:
-                        SkeletonJoints[16] = scaledJoint;
-                        LeftFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.AnkleRight:
-                        SkeletonJoints[17] = scaledJoint;
-                        RightFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.FootLeft:
-                        SkeletonJoints[18] = scaledJoint;
-                        LeftFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-
-                    case JointType.FootRight:
-                        SkeletonJoints[19] = scaledJoint;
-                        RightFootPoints.Add(new Point(scaledJoint.Position.X, scaledJoint.Position.Y));
-                        break;
-                }
-            }
-            RaisePropertyChanged(SkeletonJointsPropertyName);
-
-            RaisePropertyChanged(HeadPointsPropertyName);
-            RaisePropertyChanged(LeftHandPointsPropertyName);
-            RaisePropertyChanged(RightHandPointsPropertyName);
-            RaisePropertyChanged(LeftFootPointsPropertyName);
-            RaisePropertyChanged(RightFootPointsPropertyName);
-        }
         #endregion
 
         #region Binding Property
@@ -343,25 +271,25 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="Camera" /> property's name.
+        /// The <see cref="ViewImage" /> property's name.
         /// </summary>
-        public const string CameraPropertyName = "Camera";
+        public const string ViewImagePropertyName = "ViewImage";
 
-        private WriteableBitmap _camera = new WriteableBitmap(640, 480, 96, 96, PixelFormats.Bgr32, null);
+        private WriteableBitmap _viewImage = new WriteableBitmap(640, 480, 96, 96, PixelFormats.Bgr32, null);
 
         /// <summary>
-        /// Sets and gets the Camera property.
+        /// Sets and gets the ViewImage property.
         /// Changes to that property's value raise the PropertyChanged event. 
         /// </summary>
-        public WriteableBitmap Camera
+        public WriteableBitmap ViewImage
         {
             get
             {
-                return _camera;
+                return _viewImage;
             }
             set
             {
-                Set(() => Camera, ref _camera, value);
+                Set(() => ViewImage, ref _viewImage, value);
             }
         }
 
@@ -434,147 +362,9 @@ namespace KinectControlRobot.Application.ViewModel
             }
         }
 
-        /// <summary>
-        /// The <see cref="SkeletonJoints" /> property's name.
-        /// </summary>
-        public const string SkeletonJointsPropertyName = "SkeletonJoints";
-
-        private ObservableCollection<Joint> _skeletonJoints = new ObservableCollection<Joint>();
-
-        /// <summary>
-        /// Sets and gets the SkeletonJoints property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public ObservableCollection<Joint> SkeletonJoints
-        {
-            get
-            {
-                return _skeletonJoints;
-            }
-            set
-            {
-                Set(() => SkeletonJoints, ref _skeletonJoints, value);
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="HeadPoints" /> property's name.
-        /// </summary>
-        public const string HeadPointsPropertyName = "HeadPoints";
-
-        private PointCollection _headPoints = new PointCollection();
-
-        /// <summary>
-        /// Sets and gets the HeadPoints property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public PointCollection HeadPoints
-        {
-            get
-            {
-                return _headPoints;
-            }
-            set
-            {
-                Set(() => HeadPoints, ref _headPoints, value);
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="LeftHandPoints" /> property's name.
-        /// </summary>
-        public const string LeftHandPointsPropertyName = "LeftHandPoints";
-
-        private PointCollection _leftHandPoints = new PointCollection();
-
-        /// <summary>
-        /// Sets and gets the LeftHandPoints property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public PointCollection LeftHandPoints
-        {
-            get
-            {
-                return _leftHandPoints;
-            }
-            set
-            {
-                Set(() => LeftHandPoints, ref _leftHandPoints, value);
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="RightHandPoints" /> property's name.
-        /// </summary>
-        public const string RightHandPointsPropertyName = "RightHandPoints";
-
-        private PointCollection _rightHandPoints = new PointCollection();
-
-        /// <summary>
-        /// Sets and gets the RightHandPoints property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public PointCollection RightHandPoints
-        {
-            get
-            {
-                return _rightHandPoints;
-            }
-            set
-            {
-                Set(() => RightHandPoints, ref _rightHandPoints, value);
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="LeftFootPoints" /> property's name.
-        /// </summary>
-        public const string LeftFootPointsPropertyName = "LeftFootPoints";
-
-        private PointCollection _leftFootPoints = new PointCollection();
-
-        /// <summary>
-        /// Sets and gets the LeftFootPoints property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public PointCollection LeftFootPoints
-        {
-            get
-            {
-                return _leftFootPoints;
-            }
-            set
-            {
-                Set(() => LeftFootPoints, ref _leftFootPoints, value);
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="RightFootPoints" /> property's name.
-        /// </summary>
-        public const string RightFootPointsPropertyName = "RightFootPoints";
-
-        private PointCollection _rightFootPoints = new PointCollection();
-
-        /// <summary>
-        /// Sets and gets the RightFootPoints property.
-        /// Changes to that property's value raise the PropertyChanged event. 
-        /// </summary>
-        public PointCollection RightFootPoints
-        {
-            get
-            {
-                return _rightFootPoints;
-            }
-            set
-            {
-                Set(() => RightFootPoints, ref _rightFootPoints, value);
-            }
-        }
-
         #endregion
 
-        #region RelayCommands
+        #region RelayCommand
 
         private RelayCommand _workCommand;
 
@@ -603,6 +393,7 @@ namespace KinectControlRobot.Application.ViewModel
                             _isWorking = false;
 
                             // TODO: stop work here
+
                         }
                         else
                         {
@@ -613,6 +404,7 @@ namespace KinectControlRobot.Application.ViewModel
                             _isWorking = true;
 
                             // TODO: start work here
+
                         }
                     },
                     () => _isReady));
@@ -624,42 +416,12 @@ namespace KinectControlRobot.Application.ViewModel
         {
             // Clean up if needed
             _kinectService.StopKinectSensor();
-            _mcuService.StopMCU();
+            _kinectService.Close();
+
+            //_mcuService.StopMCU();
+            //_mcuService.Close();
 
             base.Cleanup();
-        }
-
-        private void BeginCheckMCUStatus(double interval)
-        {
-            Timer checkStatusTimer = new Timer(interval);
-            checkStatusTimer.Elapsed += new ElapsedEventHandler((o, e) =>
-            {
-                switch (_mcuService.CheckMCUStatus())
-                {
-                    case MCUStatus.DisConnected:
-                        StatusColor = "#FF3A3A3A";
-                        CameraShadowColor = "#FF3A3A3A";
-                        StatusCaption = "连接断开";
-                        StatusDescription = "程序正在尝试重新连接。。。";
-                        StatusHelperString = "请检查下位机故障";
-
-                        _isWorking = false;
-                        _isReady = false;
-
-                        // TODO: try to connect MCU and then set _isReady to true in background thread
-                        break;
-                    case MCUStatus.SystemAbnormal:
-                        StatusColor = "#FF3A3A3A";
-                        StatusCaption = "系统异常";
-                        StatusDescription = "下位机出现异常";
-                        StatusHelperString = "请检查下位机故障";
-
-                        _isWorking = false;
-                        _isReady = false;
-                        break;
-                }
-            });
-            checkStatusTimer.Start();
         }
     }
 }

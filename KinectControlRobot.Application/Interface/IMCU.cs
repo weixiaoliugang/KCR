@@ -7,6 +7,11 @@ namespace KinectControlRobot.Application.Interface
 {
     public interface IMCU
     {
+        MCUStatus Status { get; }
+
+        void Connect();
+
+        void DisConnect();
     }
 
     public enum MCUStatus

@@ -7,9 +7,19 @@ namespace KinectControlRobot.Application.Interface
 {
     public interface IMCUService
     {
-        IMCU CurrentMCU { get; }
+        IMCU CurrentMCU { get; set; }
 
-        MCUStatus CheckMCUStatus();
+        event Action<MCUStatus> MCUStatusChanged;
+
+        void Initialize();
+
+        void InitializeAsynchronous();
+
+        void Close();
+
+        void StartMCU();
+
+        void ResetMCU();
 
         void StopMCU();
     }
