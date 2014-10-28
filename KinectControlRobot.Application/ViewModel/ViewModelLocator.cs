@@ -59,6 +59,7 @@ namespace KinectControlRobot.Application.ViewModel
         /// </summary>
         public static void Cleanup()
         {
+            // call the cleanup() in the MainViewModel
             ServiceLocator.Current.GetInstance<MainViewModel>().Cleanup();
         }
     }

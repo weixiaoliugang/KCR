@@ -30,17 +30,22 @@ namespace KinectControlRobot.Application.ViewModel
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
+        // fields for the kinect event handler
         private IKinectService _kinectService;
         private byte[] _pixelData;
+        private DepthImagePixel[] _depthData;
         private Skeleton[] _skeletonData;
         private readonly Int32Rect _rect = new Int32Rect(0, 0, 640, 480);
 
+        // fields for the mcu event handler
         private IMCUService _mcuService;
 
+        // flags indicate the app's atatus
         private bool _isReady = false;
         private bool _isWorking = false;
 
 #if DEBUG
+        // this is a class that only unittest would use
         public MainViewModel(IKinectService kinectService, IMCUService mcuService)
         {
             _kinectService = kinectService;
@@ -59,29 +64,49 @@ namespace KinectControlRobot.Application.ViewModel
         [PreferredConstructor]
         public MainViewModel()
         {
-            _Initialize();
+            // for the initialize progress may get the kinect sensor, make sure it'll get it until it's really running
+            if (!IsInDesignModeStatic)
+            {
+                _initialize();
+            }
         }
 
-        private void _Initialize()
+        private void _initialize()
         {
+            // handle the KinectServiceReady message 
             Messenger.Default.Register<KinectServiceReadyMessage>(this, (msg) =>
                 {
+                    // make sure the event registed in the MainViewModel so the event handler
+                    // coule be call in the main thread as it might modify the variables here
                     DispatcherHelper.CheckBeginInvokeOnUI(() =>
                     {
-                        _kinectService.RegisterColorImageFrameReadyEvent(_ColorImageFrameReadyEventHandler);
+                        _kinectService.ColorImageFrameReady += _colorImageFrameReadyEventHandler;
                         _kinectService.StartKinectSensor();
                     });
                 });
 
+            // get the services in a background thread so it won't block the UI thread
             Task.Factory.StartNew(() =>
             {
+                // get the KinectService and the MCUService parallel 
+                // this call is a block one
                 Parallel.Invoke(() =>
                 {
+                    // this GetInstance might be blocked
                     _kinectService = ServiceLocator.Current.GetInstance<IKinectService>();
                     _kinectService.Initialize();
                     _kinectService.SetupKinectSensor(ColorImageFormat.RgbResolution640x480Fps30,
-                        DepthImageFormat.Resolution640x480Fps30);
+                        DepthImageFormat.Resolution640x480Fps30, new TransformSmoothParameters
+                                                                {
+                                                                    Smoothing = 0.5f,
+                                                                    Correction = 0.5f,
+                                                                    Prediction = 0.5f,
+                                                                    JitterRadius = 0.05f,
+                                                                    MaxDeviationRadius = 0.04f
+                                                                });
 
+                    // send the message to tell the whole app that the kinect is ready for the
+                    // might wanna do things with the sensor
                     Messenger.Default.Send(new KinectServiceReadyMessage(_kinectService));
 
                     StatusDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
@@ -106,12 +131,12 @@ namespace KinectControlRobot.Application.ViewModel
 
         #region EventHandler
 
-        private void _MCUStatusChangedEventHandler(MCUStatus mcuStatus)
+        private void _mcuStatusChangedEventHandler(MCUStatus mcuStatus)
         {
             switch (mcuStatus)
             {
                 case MCUStatus.DisConnected:
-                    _ChangeOnMCUError();
+                    _changeOnMCUError();
 
                     CameraShadowColor = "#FF3A3A3A";
                     StatusCaption = "连接断开";
@@ -139,7 +164,7 @@ namespace KinectControlRobot.Application.ViewModel
                         });
                     break;
                 case MCUStatus.SystemAbnormal:
-                    _ChangeOnMCUError();
+                    _changeOnMCUError();
 
                     StatusCaption = "系统异常";
                     StatusDescription = "下位机出现异常";
@@ -147,7 +172,7 @@ namespace KinectControlRobot.Application.ViewModel
                 case MCUStatus.Working:
                     if (!_isWorking)
                     {
-                        _ChangeOnMCUError();
+                        _changeOnMCUError();
 
                         StatusCaption = "系统异常";
                         StatusDescription = "下位机报告仍在工作";
@@ -156,7 +181,7 @@ namespace KinectControlRobot.Application.ViewModel
             }
         }
 
-        private void _ChangeOnMCUError()
+        private void _changeOnMCUError()
         {
             StatusColor = "#FF3A3A3A";
             StatusHelperString = "请检查下位机故障";
@@ -165,7 +190,7 @@ namespace KinectControlRobot.Application.ViewModel
             _isReady = false;
         }
 
-        private void _ColorImageFrameReadyEventHandler(object sender, ColorImageFrameReadyEventArgs e)
+        private void _colorImageFrameReadyEventHandler(object sender, ColorImageFrameReadyEventArgs e)
         {
             using (ColorImageFrame imageFrame = e.OpenColorImageFrame())
             {
@@ -175,25 +200,6 @@ namespace KinectControlRobot.Application.ViewModel
                     imageFrame.CopyPixelDataTo(_pixelData);
 
                     ViewImage.WritePixels(_rect, _pixelData.ToArray(), ViewImage.BackBufferStride, 0);
-                }
-            }
-        }
-
-        private void _SkeletonFrameReadyEventHandler(object sender, SkeletonFrameReadyEventArgs e)
-        {
-            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
-            {
-                if (skeletonFrame != null)
-                {
-                    _skeletonData = new Skeleton[_kinectService.CurrentKinectSensor.SkeletonStream.FrameSkeletonArrayLength];
-                    skeletonFrame.CopySkeletonDataTo(_skeletonData);
-                    Skeleton skeleton = (from ske in _skeletonData
-                                         where ske.TrackingState == SkeletonTrackingState.Tracked
-                                         select ske).FirstOrDefault();
-                    if (skeleton != null)
-                    {
-
-                    }
                 }
             }
         }

@@ -30,13 +30,16 @@ namespace KinectControlRobot.WPF
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
 
+            // handle the KinectServiceReadyMessage and register the event using the method here
+            // for the KinectSensor may take time to get and this ctor is called at the moment the 
+            // app is started
             Messenger.Default.Register<KinectServiceReadyMessage>(this, (msg) =>
-                DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                {
-                    msg.KinectService.RegisterSkeletonFrameReadyEvent(SkeletonFrameReadyEventHandler);
-                    _skeletonDisplayManager = new SkeletonDisplayManager(msg.KinectService.CurrentKinectSensor,
-                        SkeletonCanvas);
-                }));
+                        {
+                            // this is running in a background thread so the event is handled in background
+                            msg.KinectService.SkeletonFrameReady += SkeletonFrameReadyEventHandler;
+                            _skeletonDisplayManager = new SkeletonDisplayManager(msg.KinectService.CurrentKinectSensor,
+                                SkeletonCanvas);
+                        });
         }
 
         private void SkeletonFrameReadyEventHandler(object sender, SkeletonFrameReadyEventArgs e)
@@ -51,7 +54,8 @@ namespace KinectControlRobot.WPF
                 if (_skeletons.All(s => s.TrackingState == SkeletonTrackingState.NotTracked))
                     return;
 
-                _skeletonDisplayManager.Draw(_skeletons, false);
+                DispatcherHelper.CheckBeginInvokeOnUI(() => 
+                { _skeletonDisplayManager.Draw(_skeletons, false); });
             }
         }
     }

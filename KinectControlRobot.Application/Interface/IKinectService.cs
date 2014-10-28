@@ -6,28 +6,59 @@ using Microsoft.Kinect;
 
 namespace KinectControlRobot.Application.Interface
 {
+    /// <summary>
+    /// Interface shows the methods and properties a KinectService should implement
+    /// </summary>
     public interface IKinectService
     {
+        /// <summary>
+        /// Gets or sets the current kinect sensor.
+        /// </summary>
+        /// <value>
+        /// The current kinect sensor.
+        /// </value>
         KinectSensor CurrentKinectSensor { get; set; }
 
-        void RegisterColorImageFrameReadyEvent(EventHandler<ColorImageFrameReadyEventArgs> handler);
+        public event EventHandler<ColorImageFrameReadyEventArgs> ColorImageFrameReady;
 
-        void RegisterDepthImageFrameReadyEvent(EventHandler<DepthImageFrameReadyEventArgs> handler);
+        public event EventHandler<DepthImageFrameReadyEventArgs> DepthImageFrameReady;
 
-        void RegisterSkeletonFrameReadyEvent(EventHandler<SkeletonFrameReadyEventArgs> handler);
+        public event EventHandler<SkeletonFrameReadyEventArgs> SkeletonFrameReady;
 
-        void RegisterAllFrameReadyEvent(EventHandler<AllFramesReadyEventArgs> handler);
+        public event EventHandler<AllFramesReadyEventArgs> AllFrameReady;
 
-        void SetupKinectSensor(ColorImageFormat colorImageFormat, DepthImageFormat depthImageFormat);
+        /// <summary>
+        /// Setups the kinect sensor.
+        /// </summary>
+        /// <param name="colorImageFormat">The color image format.</param>
+        /// <param name="depthImageFormat">The depth image format.</param>
+        /// <param name="transformSmoothParameter">The transform smooth parameter.</param>
+        void SetupKinectSensor(ColorImageFormat colorImageFormat, 
+            DepthImageFormat depthImageFormat, TransformSmoothParameters transformSmoothParameter);
 
+        /// <summary>
+        /// Initializes this instance.
+        /// </summary>
         void Initialize();
 
+        /// <summary>
+        /// Initializes the instance asynchronously.
+        /// </summary>
         void InitializeAsynchronous();
 
+        /// <summary>
+        /// Closes this instance.
+        /// </summary>
         void Close();
 
+        /// <summary>
+        /// Starts the kinect sensor.
+        /// </summary>
         void StartKinectSensor();
 
+        /// <summary>
+        /// Stops the kinect sensor.
+        /// </summary>
         void StopKinectSensor();
     }
 }
