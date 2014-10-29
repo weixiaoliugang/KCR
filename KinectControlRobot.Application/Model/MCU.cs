@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using KinectControlRobot.Application.Interface;
-using System.Timers;
 
 namespace KinectControlRobot.Application.Model
 {
@@ -21,13 +17,6 @@ namespace KinectControlRobot.Application.Model
         public MCUStatus Status
         {
             get { return _checkStatus(); }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MCU"/> class.
-        /// </summary>
-        public MCU()
-        {
         }
 
         /// <summary>

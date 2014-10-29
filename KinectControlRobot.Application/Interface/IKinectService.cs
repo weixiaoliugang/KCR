@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Kinect;
 
 namespace KinectControlRobot.Application.Interface
@@ -17,15 +14,15 @@ namespace KinectControlRobot.Application.Interface
         /// <value>
         /// The current kinect sensor.
         /// </value>
-        KinectSensor CurrentKinectSensor { get; set; }
+        KinectSensor CurrentKinectSensor { get; }
 
-        public event EventHandler<ColorImageFrameReadyEventArgs> ColorImageFrameReady;
+        event EventHandler<ColorImageFrameReadyEventArgs> ColorImageFrameReady;
 
-        public event EventHandler<DepthImageFrameReadyEventArgs> DepthImageFrameReady;
+        event EventHandler<DepthImageFrameReadyEventArgs> DepthImageFrameReady;
 
-        public event EventHandler<SkeletonFrameReadyEventArgs> SkeletonFrameReady;
+        event EventHandler<SkeletonFrameReadyEventArgs> SkeletonFrameReady;
 
-        public event EventHandler<AllFramesReadyEventArgs> AllFrameReady;
+        event EventHandler<AllFramesReadyEventArgs> AllFrameReady;
 
         /// <summary>
         /// Setups the kinect sensor.

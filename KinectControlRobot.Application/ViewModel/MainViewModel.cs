@@ -1,22 +1,15 @@
 ﻿using System.Windows.Media.Imaging;
 using GalaSoft.MvvmLight;
-using KinectControlRobot.Application.Service;
 using KinectControlRobot.Application.Interface;
 using System.Windows.Media;
-using System.Collections.ObjectModel;
 using Microsoft.Kinect;
 using System.Windows;
 using GalaSoft.MvvmLight.Threading;
-using System.Timers;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Ioc;
 using System.Linq;
-using System;
-using Coding4Fun.Kinect.Wpf;
 using GalaSoft.MvvmLight.Command;
 using Microsoft.Practices.ServiceLocation;
-using System.Collections.Generic;
-using System.Windows.Controls;
 using GalaSoft.MvvmLight.Messaging;
 using KinectControlRobot.Application.Message;
 
@@ -41,8 +34,8 @@ namespace KinectControlRobot.Application.ViewModel
         private IMCUService _mcuService;
 
         // flags indicate the app's atatus
-        private bool _isReady = false;
-        private bool _isWorking = false;
+        private bool _isReady;
+        private bool _isWorking;
 
 #if DEBUG
         // this is a class that only unittest would use
@@ -62,6 +55,7 @@ namespace KinectControlRobot.Application.ViewModel
 #endif
 
         [PreferredConstructor]
+        // ReSharper disable once UnusedMember.Global
         public MainViewModel()
         {
             // for the initialize progress may get the kinect sensor, make sure it'll get it until it's really running
@@ -74,16 +68,14 @@ namespace KinectControlRobot.Application.ViewModel
         private void _initialize()
         {
             // handle the KinectServiceReady message 
-            Messenger.Default.Register<KinectServiceReadyMessage>(this, (msg) =>
+            Messenger.Default.Register<KinectServiceReadyMessage>(this,
+                // make sure the event registed in the MainViewModel so the event handler
+                // coule be call in the main thread as it might modify the variables here
+                msg => DispatcherHelper.CheckBeginInvokeOnUI(() =>
                 {
-                    // make sure the event registed in the MainViewModel so the event handler
-                    // coule be call in the main thread as it might modify the variables here
-                    DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                    {
-                        _kinectService.ColorImageFrameReady += _colorImageFrameReadyEventHandler;
-                        _kinectService.StartKinectSensor();
-                    });
-                });
+                    _kinectService.ColorImageFrameReady += _colorImageFrameReadyEventHandler;
+                    _kinectService.StartKinectSensor();
+                }));
 
             // get the services in a background thread so it won't block the UI thread
             Task.Factory.StartNew(() =>

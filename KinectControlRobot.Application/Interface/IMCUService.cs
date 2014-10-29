@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace KinectControlRobot.Application.Interface
 {
@@ -16,7 +13,7 @@ namespace KinectControlRobot.Application.Interface
         /// <value>
         /// The current mcu.
         /// </value>
-        IMCU CurrentMCU { get; set; }
+        IMCU CurrentMCU { get; }
 
         event Action<MCUStatus> MCUStatusChanged;
 

@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using KinectControlRobot.Application.Interface;
 using Microsoft.Kinect;
-using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Ioc;
 
@@ -27,15 +24,11 @@ namespace KinectControlRobot.Application.Service
         public KinectSensor CurrentKinectSensor
         {
             get { return _currentKinectSensor; }
-            set
+            private set
             {
-                if (value is KinectSensor)
+                if (value != null)
                 {
                     _currentKinectSensor = value;
-                }
-                else
-                {
-                    throw new ArgumentException();
                 }
             }
         }
@@ -50,8 +43,10 @@ namespace KinectControlRobot.Application.Service
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KinectService"/> class.
+        /// this ctor is for the ServiceLocator.Current.GetInstance() to use
         /// </summary>
         [PreferredConstructor]
+        // ReSharper disable once UnusedMember.Global
         public KinectService() { }
 
         /// <summary>
@@ -235,10 +230,7 @@ namespace KinectControlRobot.Application.Service
         /// </summary>
         public void InitializeAsynchronous()
         {
-            Task.Factory.StartNew(() =>
-                {
-                    Initialize();
-                });
+            Task.Factory.StartNew(Initialize);
         }
 
         /// <summary>

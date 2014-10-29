@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace KinectControlRobot.Application.Interface
+﻿namespace KinectControlRobot.Application.Interface
 {
     /// <summary>
     /// Interface shows a MCU should implement

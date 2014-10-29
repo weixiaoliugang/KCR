@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using KinectControlRobot.Application.Interface;
 using System.Timers;
-using KinectControlRobot.Application.Model;
 using Microsoft.Practices.ServiceLocation;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Ioc;
@@ -29,15 +25,11 @@ namespace KinectControlRobot.Application.Service
         public IMCU CurrentMCU
         {
             get { return _currentMCU; }
-            set
+            private set
             {
-                if (value is IMCU)
+                if (value != null)
                 {
                     _currentMCU = value;
-                }
-                else
-                {
-                    throw new ArgumentException();
                 }
             }
         }
@@ -75,8 +67,8 @@ namespace KinectControlRobot.Application.Service
             _checkCanExecute();
 
             // call the lambda expression each tick
-            Timer checkStatusTimer = new Timer(200);
-            checkStatusTimer.Elapsed += new ElapsedEventHandler((o, e) =>
+            var checkStatusTimer = new Timer(200);
+            checkStatusTimer.Elapsed += (o, e) =>
             {
                 MCUStatus currMCUStatus = _currentMCU.Status;
                 if (currMCUStatus != _lastStatus)
@@ -89,7 +81,7 @@ namespace KinectControlRobot.Application.Service
 
                     _lastStatus = currMCUStatus;
                 }
-            });
+            };
             checkStatusTimer.Start();
         }
 
@@ -150,10 +142,7 @@ namespace KinectControlRobot.Application.Service
         /// </summary>
         public void InitializeAsynchronous()
         {
-            Task.Factory.StartNew(() =>
-            {
-                Initialize();
-            });
+            Task.Factory.StartNew(Initialize);
         }
 
         /// <summary>

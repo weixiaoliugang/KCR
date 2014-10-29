@@ -1,10 +1,7 @@
 ﻿using System.Windows;
 using KinectControlRobot.Application.ViewModel;
 using CustomChrome;
-using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Kinect;
-using Microsoft.Practices.ServiceLocation;
-using KinectControlRobot.Application.Interface;
 using Kinect.Toolbox;
 using System.Linq;
 using GalaSoft.MvvmLight.Messaging;
@@ -16,6 +13,7 @@ namespace KinectControlRobot.WPF
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    // ReSharper disable once RedundantExtendsListEntry
     public partial class MainWindow : CustomChromeWindow
     {
         private SkeletonDisplayManager _skeletonDisplayManager;
@@ -33,7 +31,7 @@ namespace KinectControlRobot.WPF
             // handle the KinectServiceReadyMessage and register the event using the method here
             // for the KinectSensor may take time to get and this ctor is called at the moment the 
             // app is started
-            Messenger.Default.Register<KinectServiceReadyMessage>(this, (msg) =>
+            Messenger.Default.Register<KinectServiceReadyMessage>(this, msg =>
                         {
                             // this is running in a background thread so the event is handled in background
                             msg.KinectService.SkeletonFrameReady += SkeletonFrameReadyEventHandler;
@@ -54,8 +52,7 @@ namespace KinectControlRobot.WPF
                 if (_skeletons.All(s => s.TrackingState == SkeletonTrackingState.NotTracked))
                     return;
 
-                DispatcherHelper.CheckBeginInvokeOnUI(() => 
-                { _skeletonDisplayManager.Draw(_skeletons, false); });
+                DispatcherHelper.CheckBeginInvokeOnUI(() => _skeletonDisplayManager.Draw(_skeletons, false));
             }
         }
     }
