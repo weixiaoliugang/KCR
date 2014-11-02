@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using KinectControlRobot.Application.ViewModel;
 using CustomChrome;
 using Microsoft.Kinect;
@@ -17,7 +18,6 @@ namespace KinectControlRobot.WPF
     public partial class MainWindow : CustomChromeWindow
     {
         private SkeletonDisplayManager _skeletonDisplayManager;
-        private Skeleton[] _skeletons;
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -47,12 +47,13 @@ namespace KinectControlRobot.WPF
                 if (skeletonFrame == null)
                     return;
 
-                skeletonFrame.GetSkeletons(ref _skeletons);
+                var skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
+                skeletonFrame.GetSkeletons(ref skeletons);
 
-                if (_skeletons.All(s => s.TrackingState == SkeletonTrackingState.NotTracked))
+                if (skeletons.All(s => s.TrackingState == SkeletonTrackingState.NotTracked))
                     return;
 
-                DispatcherHelper.CheckBeginInvokeOnUI(() => _skeletonDisplayManager.Draw(_skeletons, false));
+                DispatcherHelper.CheckBeginInvokeOnUI(() => _skeletonDisplayManager.Draw(skeletons, false));
             }
         }
     }

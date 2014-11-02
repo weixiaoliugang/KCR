@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using KinectControlRobot.Application.Interface;
 using Microsoft.Kinect;
@@ -187,6 +188,18 @@ namespace KinectControlRobot.Application.Service
             _checkCanExecute();
 
             KinectSensor.Start();
+        }
+
+        /// <summary>
+        /// Starts the audio stream.
+        /// </summary>
+        /// <param name="timeSpan">The time span.</param>
+        /// <returns></returns>
+        public Stream StartAudioStream(TimeSpan timeSpan)
+        {
+            _checkCanExecute();
+
+            return KinectSensor.AudioSource.Start(timeSpan);
         }
 
         /// <summary>

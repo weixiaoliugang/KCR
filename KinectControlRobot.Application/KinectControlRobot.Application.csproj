@@ -75,7 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper\BodyStateDetector.cs" />
-    <Compile Include="Helper\SkeletonToVectorHelper.cs" />
+    <Compile Include="Helper\SkeletonToVectorConverter.cs" />
     <Compile Include="Interface\IKinectService.cs" />
     <Compile Include="Interface\IMCU.cs" />
     <Compile Include="Interface\IMCUService.cs" />

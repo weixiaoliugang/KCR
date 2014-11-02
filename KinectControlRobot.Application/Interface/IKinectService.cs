@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Kinect;
 
 namespace KinectControlRobot.Application.Interface
@@ -72,6 +73,13 @@ namespace KinectControlRobot.Application.Interface
         /// Starts the kinect sensor.
         /// </summary>
         void StartKinectSensor();
+
+        /// <summary>
+        /// Starts the audio stream.
+        /// </summary>
+        /// <param name="timeSpan">The time span.</param>
+        /// <returns></returns>
+        Stream StartAudioStream(TimeSpan timeSpan);
 
         /// <summary>
         /// Stops the kinect sensor.

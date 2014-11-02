@@ -9,7 +9,7 @@ using System.Windows;
 
 namespace KinectControlRobot.Application.Helper
 {
-    public static class SkeletonToVectorHelper
+    public static class SkeletonToVectorConverter
     {
         public const double FactorToDegree = 180 / Math.PI;
 

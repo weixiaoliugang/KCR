@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.IO;
 using System.Windows.Media.Imaging;
 using GalaSoft.MvvmLight;
 using KinectControlRobot.Application.Helper;
@@ -6,7 +7,6 @@ using KinectControlRobot.Application.Interface;
 using System.Windows.Media;
 using Microsoft.Kinect;
 using System.Windows;
-using GalaSoft.MvvmLight.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Ioc;
 using System.Linq;
@@ -27,10 +27,9 @@ namespace KinectControlRobot.Application.ViewModel
     {
         // fields for the kinect event handler
         private IKinectService _kinectService;
-        private byte[] _pixelData;
-        private DepthImagePixel[] _depthData;
-        private Skeleton[] _skeletonData;
+        private Stream _audioStream;
         private readonly Int32Rect _rect = new Int32Rect(0, 0, 640, 480);
+        private byte _frameCounter;
 
         // fields for the mcu event handler
         private IMCUService _mcuService;
@@ -67,18 +66,10 @@ namespace KinectControlRobot.Application.ViewModel
             }
         }
 
+        private readonly object _statusDescriptionLock = new object();
+
         private void _initialize()
         {
-            // handle the KinectServiceReady message 
-            Messenger.Default.Register<KinectServiceReadyMessage>(this,
-                // make sure the event registed in the MainViewModel so the event handler
-                // coule be call in the main thread as it might modify the variables here
-                msg => DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                {
-                    _kinectService.AllFrameReady += _onAllFrameReady;
-                    _kinectService.StartKinectSensor();
-                }));
-
             // get the services in a background thread so it won't block the UI thread
             Task.Factory.StartNew(() =>
             {
@@ -86,8 +77,9 @@ namespace KinectControlRobot.Application.ViewModel
                 // this call is a block one
                 Parallel.Invoke(() =>
                 {
-                    // this GetInstance might be blocked
                     _kinectService = ServiceLocator.Current.GetInstance<IKinectService>();
+
+                    // this initialize might be blocked
                     _kinectService.Initialize();
                     _kinectService.SetupKinectSensor(ColorImageFormat.RgbResolution640x480Fps30,
                         DepthImageFormat.Resolution640x480Fps30, new TransformSmoothParameters
@@ -98,19 +90,30 @@ namespace KinectControlRobot.Application.ViewModel
                                                                     JitterRadius = 0.05f,
                                                                     MaxDeviationRadius = 0.04f
                                                                 });
+                    _kinectService.AllFrameReady += _onAllFrameReady;
+                    _kinectService.StartKinectSensor();
+                    _audioStream = _kinectService.StartAudioStream(new TimeSpan(0, 0, 0, 0, 100));
 
                     // send the message to tell the whole app that the kinect is ready for the
                     // might wanna do things with the sensor
                     Messenger.Default.Send(new KinectServiceReadyMessage(_kinectService));
 
-                    StateDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
+                    lock (_statusDescriptionLock)
+                    {
+                        StateDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
+                    }
                 }, () =>
                 {
-                    //_mcuService = ServiceLocator.Current.GetInstance<IMCUService>();
-                    //_mcuService.Initialize();
+                    _mcuService = ServiceLocator.Current.GetInstance<IMCUService>();
+
+                    // this initialize might be blocked
+                    _mcuService.Initialize();
                     _mcuService.MCUStateChanged += _onMCUStateChanged;
 
-                    //StateDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
+                    lock (_statusDescriptionLock)
+                    {
+                        StateDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
+                    }
                 });
 
                 CameraShadowColor = "#FF66B034";
@@ -123,48 +126,85 @@ namespace KinectControlRobot.Application.ViewModel
             });
         }
 
+        #region EventHandler
+
         private void _onAllFrameReady(object sender, AllFramesReadyEventArgs e)
         {
-            using (ColorImageFrame imageFrame = e.OpenColorImageFrame())
-            using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
-            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+            Parallel.Invoke(() =>
             {
-                if (imageFrame != null)
+                using (ColorImageFrame imageFrame = e.OpenColorImageFrame())
                 {
-                    var pixelData = new byte[imageFrame.PixelDataLength];
-                    imageFrame.CopyPixelDataTo(pixelData);
-
-                    ViewImage.WritePixels(_rect,pixelData.ToArray(),ViewImage.BackBufferStride,0);
-                }
-
-                if (skeletonFrame != null && depthFrame != null)
-                {
-                    var skeleton = skeletonFrame.GetSkeletons()
-                        .FirstOrDefault(s => s.TrackingState == SkeletonTrackingState.Tracked);
-                    var depthData = depthFrame.GetRawPixelData();
-
-                    if (skeleton != null && depthData != null)
+                    if (imageFrame != null)
                     {
-                        List<double> leftBodyState, rightBodyState;
-                        BodyStateDetector.GetAngleAndRotation(skeleton, out leftBodyState, out rightBodyState);
+                        var pixelData = new byte[imageFrame.PixelDataLength];
+                        imageFrame.CopyPixelDataTo(pixelData);
 
-                        var mappedHandLeft =
-                            _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(skeleton.Joints[JointType.HandLeft].Position,
-                                _kinectService.KinectSensor.DepthStream.Format);
-                        var mappedHandRight =
-                            _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(skeleton.Joints[JointType.HandRight].Position,
-                                _kinectService.KinectSensor.DepthStream.Format);
-
-                        bool isHandLeftOpen, isHandRightOpen;
-                        BodyStateDetector.GetHandState(depthData, mappedHandLeft, mappedHandRight, out isHandLeftOpen, out isHandRightOpen);
-
-                        //TODO: Process data above
+                        ViewImage.WritePixels(_rect, pixelData.ToArray(), ViewImage.BackBufferStride, 0);
                     }
                 }
-            }
-        }
+            }, () =>
+            {
 
-        #region EventHandler
+                // use the _frameCounter to make this code run every 1/10 second
+                // for this event is fired every 1/30 second
+                if (_isWorking && (++_frameCounter) == 3)
+                {
+                    _frameCounter = 0;
+
+                    Task.Factory.StartNew(() =>
+                    {
+                        using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
+                        using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+                        {
+                            var skeleton = skeletonFrame.GetSkeletons()
+                                 .FirstOrDefault(s => s.TrackingState == SkeletonTrackingState.Tracked);
+
+                            if (skeleton != null && depthFrame != null)
+                            {
+                                // TODO: Create a dataseq that the mcu is supposed to send
+
+                                Parallel.Invoke(() =>
+                                {
+                                    var leftBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
+                                        BodySide.Left);
+                                    var rightBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
+                                        BodySide.Right);
+
+                                    //TODO: Process data and save it to the list which is supposed to send
+                                }, () =>
+                                {
+                                    var mappedHandLeft =
+                                        _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(
+                                            skeleton.Joints[JointType.HandLeft].Position,
+                                            _kinectService.KinectSensor.DepthStream.Format);
+                                    var mappedHandRight =
+                                        _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(
+                                            skeleton.Joints[JointType.HandRight].Position,
+                                            _kinectService.KinectSensor.DepthStream.Format);
+
+                                    var isHandLeftOpen = BodyStateDetector.IsHandOpen(depthFrame,
+                                        mappedHandLeft);
+                                    var isHandRightOpen = BodyStateDetector.IsHandOpen(depthFrame,
+                                        mappedHandRight);
+
+                                    //TODO: Process data and save it to the list which is supposed to send
+                                }, () =>
+                                {
+                                    var audioData = new byte[3200];
+
+                                    // record current audio data
+                                    _audioStream.Read(audioData, 0, audioData.Length);
+
+                                    // TODO: save it to the send list
+                                });
+
+                                // TODO: send to mcu
+                            }
+                        }
+                    });
+                }
+            });
+        }
 
         private void _onMCUStateChanged(MCUState mcuState)
         {
@@ -177,7 +217,6 @@ namespace KinectControlRobot.Application.ViewModel
                     StateCaption = "连接断开";
                     StateDescription = "程序正在尝试重新连接。。。";
 
-                    // TODO: try to connect MCU and then set _isReady to true in background thread
                     Task.Factory.StartNew(() =>
                         {
                             while (_mcuService.CurrentMCU.State != MCUState.SystemNormal)
@@ -413,25 +452,21 @@ namespace KinectControlRobot.Application.ViewModel
 
                         if (_isWorking)
                         {
+                            _isWorking = false;
+
                             StateCaption = "系统就绪";
                             StateDescription = "可以开始准备了";
 
                             ButtonString = "准备";
-                            _isWorking = false;
-
-                            // TODO: stop work here
-
                         }
                         else
                         {
+                            _isWorking = true;
+
                             StateCaption = "正在工作";
                             StateDescription = "系统正常运行";
 
                             ButtonString = "停止";
-                            _isWorking = true;
-
-                            // TODO: start work here
-
                         }
                     },
                     () => _isReady));
@@ -445,8 +480,8 @@ namespace KinectControlRobot.Application.ViewModel
             _kinectService.StopKinectSensor();
             _kinectService.Close();
 
-            //_mcuService.StopMCU();
-            //_mcuService.Close();
+            _mcuService.StopMCU();
+            _mcuService.Close();
 
             base.Cleanup();
         }

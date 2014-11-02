@@ -19,12 +19,6 @@ namespace KinectControlRobot.Application.Model
             get { return _checkState(); }
         }
 
-        /// <summary>
-        /// Check the current mcu State.
-        /// </summary>
-        /// <returns>
-        /// The current mcu State
-        /// </returns>
         private MCUState _checkState()
         {
             throw new NotImplementedException();
