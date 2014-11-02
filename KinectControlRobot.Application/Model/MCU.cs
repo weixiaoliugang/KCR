@@ -9,23 +9,23 @@ namespace KinectControlRobot.Application.Model
     public class MCU : IMCU
     {
         /// <summary>
-        /// Gets the status.
+        /// Gets the State.
         /// </summary>
         /// <value>
-        /// The MCUStatus.
+        /// The MCUState.
         /// </value>
-        public MCUStatus Status
+        public MCUState State
         {
-            get { return _checkStatus(); }
+            get { return _checkState(); }
         }
 
         /// <summary>
-        /// Check the current mcu status.
+        /// Check the current mcu State.
         /// </summary>
         /// <returns>
-        /// The current mcu status
+        /// The current mcu State
         /// </returns>
-        private MCUStatus _checkStatus()
+        private MCUState _checkState()
         {
             throw new NotImplementedException();
         }

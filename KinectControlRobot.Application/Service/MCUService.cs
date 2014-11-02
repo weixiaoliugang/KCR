@@ -13,7 +13,7 @@ namespace KinectControlRobot.Application.Service
     public class MCUService : IMCUService
     {
         private IMCU _currentMCU;
-        private MCUStatus _lastStatus;
+        private MCUState _lastState;
 
         /// <summary>
         /// Gets or sets the current mcu.
@@ -36,16 +36,16 @@ namespace KinectControlRobot.Application.Service
 
         private void _checkCanExecute()
         {
-            if (_currentMCU == null || _currentMCU.Status != MCUStatus.SystemNormal)
+            if (_currentMCU == null || _currentMCU.State != MCUState.SystemNormal)
             {
                 throw new InvalidOperationException();
             }
         }
 
         /// <summary>
-        /// Occurs when [mcu status changed].
+        /// Occurs when [mcu State changed].
         /// </summary>
-        public event Action<MCUStatus> MCUStatusChanged;
+        public event Action<MCUState> MCUStateChanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MCUService"/> class.
@@ -62,27 +62,27 @@ namespace KinectControlRobot.Application.Service
             CurrentMCU = mcu;
         }
 
-        private void _startQueryMCUStatus()
+        private void _startQueryMCUState()
         {
             _checkCanExecute();
 
             // call the lambda expression each tick
-            var checkStatusTimer = new Timer(200);
-            checkStatusTimer.Elapsed += (o, e) =>
+            var checkStateTimer = new Timer(200);
+            checkStateTimer.Elapsed += (o, e) =>
             {
-                MCUStatus currMCUStatus = _currentMCU.Status;
-                if (currMCUStatus != _lastStatus)
+                MCUState currMCUState = _currentMCU.State;
+                if (currMCUState != _lastState)
                 {
-                    Action<MCUStatus> handler = MCUStatusChanged;
+                    Action<MCUState> handler = MCUStateChanged;
                     if (handler != null)
                     {
-                        handler(currMCUStatus);
+                        handler(currMCUState);
                     }
 
-                    _lastStatus = currMCUStatus;
+                    _lastState = currMCUState;
                 }
             };
-            checkStatusTimer.Start();
+            checkStateTimer.Start();
         }
 
         /// <summary>
@@ -126,14 +126,14 @@ namespace KinectControlRobot.Application.Service
             if (_currentMCU == null)
             {
                 _currentMCU = ServiceLocator.Current.GetInstance<IMCU>();
-                while (_currentMCU.Status != MCUStatus.SystemNormal)
+                while (_currentMCU.State != MCUState.SystemNormal)
                 {
                     System.Threading.Thread.Sleep(200);
                     _currentMCU.Connect();
                 }
 
-                _lastStatus = _currentMCU.Status;
-                _startQueryMCUStatus();
+                _lastState = _currentMCU.State;
+                _startQueryMCUState();
             }
         }
 

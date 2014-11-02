@@ -6,12 +6,12 @@
     public interface IMCU
     {
         /// <summary>
-        /// Gets the status.
+        /// Gets the State.
         /// </summary>
         /// <value>
-        /// The MCUStatus.
+        /// The MCUState.
         /// </value>
-        MCUStatus Status { get; }
+        MCUState State { get; }
 
         /// <summary>
         /// Connects to mcu.
@@ -25,9 +25,9 @@
     }
 
     /// <summary>
-    /// The MCU Status
+    /// The MCU State
     /// </summary>
-    public enum MCUStatus
+    public enum MCUState
     {
         DisConnected,
         SystemNormal,

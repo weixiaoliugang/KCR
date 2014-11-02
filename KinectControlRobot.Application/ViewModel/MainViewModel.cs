@@ -1,5 +1,7 @@
-﻿using System.Windows.Media.Imaging;
+﻿using System.Collections.Generic;
+using System.Windows.Media.Imaging;
 using GalaSoft.MvvmLight;
+using KinectControlRobot.Application.Helper;
 using KinectControlRobot.Application.Interface;
 using System.Windows.Media;
 using Microsoft.Kinect;
@@ -45,9 +47,9 @@ namespace KinectControlRobot.Application.ViewModel
             _mcuService = mcuService;
 
             CameraShadowColor = "#FF66B034";
-            StatusColor = "#FF66B034";
-            StatusCaption = "系统就绪";
-            StatusDescription = "可以开始准备了";
+            StateColor = "#FF66B034";
+            StateCaption = "系统就绪";
+            StateDescription = "可以开始准备了";
             ButtonString = "准备";
 
             _isReady = true;
@@ -73,7 +75,7 @@ namespace KinectControlRobot.Application.ViewModel
                 // coule be call in the main thread as it might modify the variables here
                 msg => DispatcherHelper.CheckBeginInvokeOnUI(() =>
                 {
-                    _kinectService.ColorImageFrameReady += _colorImageFrameReadyEventHandler;
+                    _kinectService.AllFrameReady += _onAllFrameReady;
                     _kinectService.StartKinectSensor();
                 }));
 
@@ -101,43 +103,84 @@ namespace KinectControlRobot.Application.ViewModel
                     // might wanna do things with the sensor
                     Messenger.Default.Send(new KinectServiceReadyMessage(_kinectService));
 
-                    StatusDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
+                    StateDescription = "Kinect已连接，程序正在尝试连接下位机。。。";
                 }, () =>
                 {
                     //_mcuService = ServiceLocator.Current.GetInstance<IMCUService>();
                     //_mcuService.Initialize();
-                    //_mcuService.MCUStatusChanged += MCUStatusChangedEventHandler;
+                    _mcuService.MCUStateChanged += _onMCUStateChanged;
 
-                    //StatusDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
+                    //StateDescription = "下位机已连接，程序正在尝试连接Kinect。。。";
                 });
 
                 CameraShadowColor = "#FF66B034";
-                StatusColor = "#FF66B034";
-                StatusCaption = "系统就绪";
-                StatusDescription = "可以开始准备了";
+                StateColor = "#FF66B034";
+                StateCaption = "系统就绪";
+                StateDescription = "可以开始准备了";
                 ButtonString = "准备";
 
                 _isReady = true;
             });
         }
 
+        private void _onAllFrameReady(object sender, AllFramesReadyEventArgs e)
+        {
+            using (ColorImageFrame imageFrame = e.OpenColorImageFrame())
+            using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
+            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+            {
+                if (imageFrame != null)
+                {
+                    var pixelData = new byte[imageFrame.PixelDataLength];
+                    imageFrame.CopyPixelDataTo(pixelData);
+
+                    ViewImage.WritePixels(_rect,pixelData.ToArray(),ViewImage.BackBufferStride,0);
+                }
+
+                if (skeletonFrame != null && depthFrame != null)
+                {
+                    var skeleton = skeletonFrame.GetSkeletons()
+                        .FirstOrDefault(s => s.TrackingState == SkeletonTrackingState.Tracked);
+                    var depthData = depthFrame.GetRawPixelData();
+
+                    if (skeleton != null && depthData != null)
+                    {
+                        List<double> leftBodyState, rightBodyState;
+                        BodyStateDetector.GetAngleAndRotation(skeleton, out leftBodyState, out rightBodyState);
+
+                        var mappedHandLeft =
+                            _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(skeleton.Joints[JointType.HandLeft].Position,
+                                _kinectService.KinectSensor.DepthStream.Format);
+                        var mappedHandRight =
+                            _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(skeleton.Joints[JointType.HandRight].Position,
+                                _kinectService.KinectSensor.DepthStream.Format);
+
+                        bool isHandLeftOpen, isHandRightOpen;
+                        BodyStateDetector.GetHandState(depthData, mappedHandLeft, mappedHandRight, out isHandLeftOpen, out isHandRightOpen);
+
+                        //TODO: Process data above
+                    }
+                }
+            }
+        }
+
         #region EventHandler
 
-        private void _mcuStatusChangedEventHandler(MCUStatus mcuStatus)
+        private void _onMCUStateChanged(MCUState mcuState)
         {
-            switch (mcuStatus)
+            switch (mcuState)
             {
-                case MCUStatus.DisConnected:
+                case MCUState.DisConnected:
                     _changeOnMCUError();
 
                     CameraShadowColor = "#FF3A3A3A";
-                    StatusCaption = "连接断开";
-                    StatusDescription = "程序正在尝试重新连接。。。";
+                    StateCaption = "连接断开";
+                    StateDescription = "程序正在尝试重新连接。。。";
 
                     // TODO: try to connect MCU and then set _isReady to true in background thread
                     Task.Factory.StartNew(() =>
                         {
-                            while (_mcuService.CurrentMCU.Status != MCUStatus.SystemNormal)
+                            while (_mcuService.CurrentMCU.State != MCUState.SystemNormal)
                             {
                                 // connect mcu and reset robot
                                 System.Threading.Thread.Sleep(200);
@@ -145,29 +188,29 @@ namespace KinectControlRobot.Application.ViewModel
                             }
 
                             CameraShadowColor = "#FF66B034";
-                            StatusColor = "#FF66B034";
-                            StatusCaption = "系统就绪";
-                            StatusDescription = "可以开始准备了";
-                            StatusHelperString = string.Empty;
+                            StateColor = "#FF66B034";
+                            StateCaption = "系统就绪";
+                            StateDescription = "可以开始准备了";
+                            StateHelperString = string.Empty;
 
                             ButtonString = "准备";
 
                             _isReady = true;
                         });
                     break;
-                case MCUStatus.SystemAbnormal:
+                case MCUState.SystemAbnormal:
                     _changeOnMCUError();
 
-                    StatusCaption = "系统异常";
-                    StatusDescription = "下位机出现异常";
+                    StateCaption = "系统异常";
+                    StateDescription = "下位机出现异常";
                     break;
-                case MCUStatus.Working:
+                case MCUState.Working:
                     if (!_isWorking)
                     {
                         _changeOnMCUError();
 
-                        StatusCaption = "系统异常";
-                        StatusDescription = "下位机报告仍在工作";
+                        StateCaption = "系统异常";
+                        StateDescription = "下位机报告仍在工作";
                     }
                     break;
             }
@@ -175,96 +218,82 @@ namespace KinectControlRobot.Application.ViewModel
 
         private void _changeOnMCUError()
         {
-            StatusColor = "#FF3A3A3A";
-            StatusHelperString = "请检查下位机故障";
+            StateColor = "#FF3A3A3A";
+            StateHelperString = "请检查下位机故障";
 
             _isWorking = false;
             _isReady = false;
-        }
-
-        private void _colorImageFrameReadyEventHandler(object sender, ColorImageFrameReadyEventArgs e)
-        {
-            using (ColorImageFrame imageFrame = e.OpenColorImageFrame())
-            {
-                if (imageFrame != null)
-                {
-                    _pixelData = new byte[imageFrame.PixelDataLength];
-                    imageFrame.CopyPixelDataTo(_pixelData);
-
-                    ViewImage.WritePixels(_rect, _pixelData.ToArray(), ViewImage.BackBufferStride, 0);
-                }
-            }
         }
 
         #endregion
 
         #region Binding Property
         /// <summary>
-        /// The <see cref="StatusCaption" /> property's name.
+        /// The <see cref="StateCaption" /> property's name.
         /// </summary>
-        public const string StatusCaptionPropertyName = "StatusCaption";
+        public const string StateCaptionPropertyName = "StateCaption";
 
-        private string _statusCaption = "等待连接。。。";
+        private string _stateCaption = "等待连接。。。";
 
         /// <summary>
-        /// Sets and gets the StatusCaption property.
+        /// Sets and gets the StateCaption property.
         /// Changes to that property's value raise the PropertyChanged event. 
         /// </summary>
-        public string StatusCaption
+        public string StateCaption
         {
             get
             {
-                return _statusCaption;
+                return _stateCaption;
             }
             set
             {
-                Set(() => StatusCaption, ref _statusCaption, value);
+                Set(() => StateCaption, ref _stateCaption, value);
             }
         }
 
         /// <summary>
-        /// The <see cref="StatusDescription" /> property's name.
+        /// The <see cref="StateDescription" /> property's name.
         /// </summary>
-        public const string StatusDescriptionPropertyName = "StatusDescription";
+        public const string StateDescriptionPropertyName = "StateDescription";
 
-        private string _statusDescription = "程序正在尝试连接。。。";
+        private string _stateDescription = "程序正在尝试连接。。。";
 
         /// <summary>
-        /// Sets and gets the StatusDescription property.
+        /// Sets and gets the StateDescription property.
         /// Changes to that property's value raise the PropertyChanged event. 
         /// </summary>
-        public string StatusDescription
+        public string StateDescription
         {
             get
             {
-                return _statusDescription;
+                return _stateDescription;
             }
             set
             {
-                Set(() => StatusDescription, ref _statusDescription, value);
+                Set(() => StateDescription, ref _stateDescription, value);
             }
         }
 
         /// <summary>
-        /// The <see cref="StatusHelperString" /> property's name.
+        /// The <see cref="StateHelperString" /> property's name.
         /// </summary>
-        public const string StatusHelperStringPropertyName = "StatusHelperString";
+        public const string StateHelperStringPropertyName = "StateHelperString";
 
-        private string _statusHelperString = string.Empty;
+        private string _stateHelperString = string.Empty;
 
         /// <summary>
-        /// Sets and gets the StatusHelperString property.
+        /// Sets and gets the StateHelperString property.
         /// Changes to that property's value raise the PropertyChanged event. 
         /// </summary>
-        public string StatusHelperString
+        public string StateHelperString
         {
             get
             {
-                return _statusHelperString;
+                return _stateHelperString;
             }
             set
             {
-                Set(() => StatusHelperString, ref _statusHelperString, value);
+                Set(() => StateHelperString, ref _stateHelperString, value);
             }
         }
 
@@ -315,25 +344,25 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="StatusColor" /> property's name.
+        /// The <see cref="StateColor" /> property's name.
         /// </summary>
-        public const string StatusColorPropertyName = "StatusColor";
+        public const string StateColorPropertyName = "StateColor";
 
-        private string _statusColor = "#FFD7DF01";
+        private string _stateColor = "#FFD7DF01";
 
         /// <summary>
-        /// Sets and gets the StatusColor property.
+        /// Sets and gets the StateColor property.
         /// Changes to that property's value raise the PropertyChanged event. 
         /// </summary>
-        public string StatusColor
+        public string StateColor
         {
             get
             {
-                return _statusColor;
+                return _stateColor;
             }
             set
             {
-                Set(() => StatusColor, ref _statusColor, value);
+                Set(() => StateColor, ref _stateColor, value);
             }
         }
 
@@ -384,8 +413,8 @@ namespace KinectControlRobot.Application.ViewModel
 
                         if (_isWorking)
                         {
-                            StatusCaption = "系统就绪";
-                            StatusDescription = "可以开始准备了";
+                            StateCaption = "系统就绪";
+                            StateDescription = "可以开始准备了";
 
                             ButtonString = "准备";
                             _isWorking = false;
@@ -395,8 +424,8 @@ namespace KinectControlRobot.Application.ViewModel
                         }
                         else
                         {
-                            StatusCaption = "正在工作";
-                            StatusDescription = "系统正常运行";
+                            StateCaption = "正在工作";
+                            StateDescription = "系统正常运行";
 
                             ButtonString = "停止";
                             _isWorking = true;

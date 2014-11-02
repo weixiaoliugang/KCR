@@ -34,13 +34,13 @@ namespace KinectControlRobot.WPF
             Messenger.Default.Register<KinectServiceReadyMessage>(this, msg =>
                         {
                             // this is running in a background thread so the event is handled in background
-                            msg.KinectService.SkeletonFrameReady += SkeletonFrameReadyEventHandler;
-                            _skeletonDisplayManager = new SkeletonDisplayManager(msg.KinectService.CurrentKinectSensor,
+                            msg.KinectService.SkeletonFrameReady += _onSkeletonFrameReady;
+                            _skeletonDisplayManager = new SkeletonDisplayManager(msg.KinectService.KinectSensor,
                                 SkeletonCanvas);
                         });
         }
 
-        private void SkeletonFrameReadyEventHandler(object sender, SkeletonFrameReadyEventArgs e)
+        private void _onSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
             using (var skeletonFrame = e.OpenSkeletonFrame())
             {

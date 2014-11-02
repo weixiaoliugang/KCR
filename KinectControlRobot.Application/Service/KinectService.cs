@@ -12,30 +12,25 @@ namespace KinectControlRobot.Application.Service
     /// </summary>
     public class KinectService : IKinectService
     {
-        private KinectSensor _currentKinectSensor;
-
         /// <summary>
         /// Gets or sets the current kinect sensor.
         /// </summary>
         /// <value>
         /// The current kinect sensor.
         /// </value>
-        /// <exception cref="System.ArgumentException"></exception>
-        public KinectSensor CurrentKinectSensor
-        {
-            get { return _currentKinectSensor; }
-            private set
-            {
-                if (value != null)
-                {
-                    _currentKinectSensor = value;
-                }
-            }
-        }
+        public KinectSensor KinectSensor { get; private set; }
+
+        /// <summary>
+        /// Gets the coordinate mapper.
+        /// </summary>
+        /// <value>
+        /// The coordinate mapper.
+        /// </value>
+        public CoordinateMapper CoordinateMapper { get; private set; }
 
         private void _checkCanExecute()
         {
-            if (_currentKinectSensor == null || _currentKinectSensor.Status != KinectStatus.Connected)
+            if (KinectSensor == null || KinectSensor.Status != KinectStatus.Connected)
             {
                 throw new InvalidOperationException();
             }
@@ -55,7 +50,9 @@ namespace KinectControlRobot.Application.Service
         /// <param name="kinectSensor">The kinect sensor.</param>
         public KinectService(KinectSensor kinectSensor)
         {
-            CurrentKinectSensor = kinectSensor;
+            KinectSensor = kinectSensor;
+
+            CoordinateMapper=new CoordinateMapper(kinectSensor);
         }
 
         /// <summary>
@@ -69,7 +66,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.ColorFrameReady += value;
+                    KinectSensor.ColorFrameReady += value;
                 }
             }
             remove
@@ -78,7 +75,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.ColorFrameReady -= value;
+                    KinectSensor.ColorFrameReady -= value;
                 }
             }
         }
@@ -94,7 +91,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.DepthFrameReady += value;
+                    KinectSensor.DepthFrameReady += value;
                 }
             }
             remove
@@ -103,7 +100,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.DepthFrameReady -= value;
+                    KinectSensor.DepthFrameReady -= value;
                 }
             }
         }
@@ -119,7 +116,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.SkeletonFrameReady += value;
+                    KinectSensor.SkeletonFrameReady += value;
                 }
             }
             remove
@@ -128,7 +125,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.SkeletonFrameReady -= value;
+                    KinectSensor.SkeletonFrameReady -= value;
                 }
             }
         }
@@ -144,7 +141,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.AllFramesReady += value;
+                    KinectSensor.AllFramesReady += value;
                 }
             }
             remove
@@ -153,7 +150,7 @@ namespace KinectControlRobot.Application.Service
 
                 if (value != null)
                 {
-                    _currentKinectSensor.AllFramesReady -= value;
+                    KinectSensor.AllFramesReady -= value;
                 }
             }
         }
@@ -170,24 +167,16 @@ namespace KinectControlRobot.Application.Service
             _checkCanExecute();
 
             // Setup kinect streams info
-            _currentKinectSensor.ColorStream.Enable(colorImageFormat);
-            _currentKinectSensor.DepthStream.Enable(depthImageFormat);
-            _currentKinectSensor.SkeletonStream.Enable(transformSmoothParameters);
-            //_currentKinectSensor.SkeletonStream.Enable(new TransformSmoothParameters
-            //{
-            //    Smoothing = 0.5f,
-            //    Correction = 0.5f,
-            //    Prediction = 0.5f,
-            //    JitterRadius = 0.05f,
-            //    MaxDeviationRadius = 0.04f
-            //});
+            KinectSensor.ColorStream.Enable(colorImageFormat);
+            KinectSensor.DepthStream.Enable(depthImageFormat);
+            KinectSensor.SkeletonStream.Enable(transformSmoothParameters);
 
             // setup kinect audiosource info
-            _currentKinectSensor.AudioSource.BeamAngleMode = BeamAngleMode.Adaptive;
-            _currentKinectSensor.AudioSource.NoiseSuppression = true;
-            _currentKinectSensor.AudioSource.EchoCancellationMode = EchoCancellationMode.CancellationOnly;
-            _currentKinectSensor.AudioSource.AutomaticGainControlEnabled = false;
-            _currentKinectSensor.AudioSource.EchoCancellationSpeakerIndex = 0;
+            KinectSensor.AudioSource.BeamAngleMode = BeamAngleMode.Adaptive;
+            KinectSensor.AudioSource.NoiseSuppression = true;
+            KinectSensor.AudioSource.EchoCancellationMode = EchoCancellationMode.CancellationOnly;
+            KinectSensor.AudioSource.AutomaticGainControlEnabled = false;
+            KinectSensor.AudioSource.EchoCancellationSpeakerIndex = 0;
         }
 
         /// <summary>
@@ -197,7 +186,7 @@ namespace KinectControlRobot.Application.Service
         {
             _checkCanExecute();
 
-            _currentKinectSensor.Start();
+            KinectSensor.Start();
         }
 
         /// <summary>
@@ -207,7 +196,7 @@ namespace KinectControlRobot.Application.Service
         {
             _checkCanExecute();
 
-            _currentKinectSensor.Stop();
+            KinectSensor.Stop();
         }
 
         /// <summary>
@@ -216,13 +205,15 @@ namespace KinectControlRobot.Application.Service
         public void Initialize()
         {
             // while haven't got the sensor, keep fetching
-            while (_currentKinectSensor == null)
+            while (KinectSensor == null)
             {
                 System.Threading.Thread.Sleep(200);
-                _currentKinectSensor = (from sensor in KinectSensor.KinectSensors
+                KinectSensor = (from sensor in KinectSensor.KinectSensors
                                         where sensor.Status == KinectStatus.Connected
                                         select sensor).FirstOrDefault();
             }
+
+            CoordinateMapper=new CoordinateMapper(KinectSensor);
         }
 
         /// <summary>
@@ -238,7 +229,7 @@ namespace KinectControlRobot.Application.Service
         /// </summary>
         public void Close()
         {
-            _currentKinectSensor = null;
+            KinectSensor = null;
         }
     }
 }

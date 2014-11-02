@@ -14,14 +14,34 @@ namespace KinectControlRobot.Application.Interface
         /// <value>
         /// The current kinect sensor.
         /// </value>
-        KinectSensor CurrentKinectSensor { get; }
+        KinectSensor KinectSensor { get; }
 
+        /// <summary>
+        /// Gets the coordinate mapper.
+        /// </summary>
+        /// <value>
+        /// The coordinate mapper.
+        /// </value>
+        CoordinateMapper CoordinateMapper { get; }
+
+        /// <summary>
+        /// Occurs when [color image frame ready].
+        /// </summary>
         event EventHandler<ColorImageFrameReadyEventArgs> ColorImageFrameReady;
 
+        /// <summary>
+        /// Occurs when [depth image frame ready].
+        /// </summary>
         event EventHandler<DepthImageFrameReadyEventArgs> DepthImageFrameReady;
 
+        /// <summary>
+        /// Occurs when [skeleton frame ready].
+        /// </summary>
         event EventHandler<SkeletonFrameReadyEventArgs> SkeletonFrameReady;
 
+        /// <summary>
+        /// Occurs when [all frame ready].
+        /// </summary>
         event EventHandler<AllFramesReadyEventArgs> AllFrameReady;
 
         /// <summary>
