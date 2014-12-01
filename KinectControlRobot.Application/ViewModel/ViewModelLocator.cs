@@ -4,25 +4,23 @@
       <vm:ViewModelLocatorTemplate xmlns:vm="clr-namespace:KinectControlRobot.ViewModel"
                                    x:Key="Locator" />
   </Application.Resources>
-  
+
   In the View:
   DataContext="{Binding Source={StaticResource Locator}, Path=ViewModelName}"
 */
 
 using GalaSoft.MvvmLight.Ioc;
-using Microsoft.Practices.ServiceLocation;
 using KinectControlRobot.Application.Interface;
-using KinectControlRobot.Application.Service;
 using KinectControlRobot.Application.Model;
+using KinectControlRobot.Application.Service;
+using Microsoft.Practices.ServiceLocation;
 
 namespace KinectControlRobot.Application.ViewModel
 {
     /// <summary>
-    /// This class contains static references to all the view models in the
-    /// application and provides an entry point for the bindings.
-    /// <para>
-    /// See http://www.galasoft.ch/mvvm
-    /// </para>
+    /// This class contains static references to all the view models in the application and provides
+    /// an entry point for the bindings.
+    /// <para> See http://www.galasoft.ch/mvvm </para>
     /// </summary>
     public class ViewModelLocator
     {
@@ -30,17 +28,18 @@ namespace KinectControlRobot.Application.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-#region Register Interface anc Class
+            #region Register Interface and Class
+
             SimpleIoc.Default.Register<IKinectService, KinectService>();
-            SimpleIoc.Default.Register<IMCUService,MCUService>();
-            SimpleIoc.Default.Register<IMCU,MCU>();
-#endregion
+            SimpleIoc.Default.Register<IMCUService, MCUService>();
+
+            #endregion Register Interface and Class
 
             SimpleIoc.Default.Register<MainViewModel>();
         }
 
         /// <summary>
-        /// Gets the Main property.
+        /// Gets the Main property. 
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance",
             "CA1822:MarkMembersAsStatic",
@@ -54,11 +53,11 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// Cleans up all the resources.
+        /// Cleans up all the resources. 
         /// </summary>
         public static void Cleanup()
         {
-            // call the cleanup() in the MainViewModel
+            // call the cleanup() in the MainViewModel 
             ServiceLocator.Current.GetInstance<MainViewModel>().Cleanup();
         }
     }

@@ -1,32 +1,28 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using GalaSoft.MvvmLight.Ioc;
 using KinectControlRobot.Application.Interface;
 using Microsoft.Kinect;
+using System;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using GalaSoft.MvvmLight.Ioc;
 
 namespace KinectControlRobot.Application.Service
 {
     /// <summary>
-    /// Class of the KinectService has the methods and properties to interact with the Kinect Sensor
+    /// Class of the KinectService has the methods and properties to interact with the Kinect Sensor 
     /// </summary>
     public class KinectService : IKinectService
     {
         /// <summary>
-        /// Gets or sets the current kinect sensor.
+        /// Gets or sets the current kinect sensor. 
         /// </summary>
-        /// <value>
-        /// The current kinect sensor.
-        /// </value>
+        /// <value> The current kinect sensor. </value>
         public KinectSensor KinectSensor { get; private set; }
 
         /// <summary>
-        /// Gets the coordinate mapper.
+        /// Gets the coordinate mapper. 
         /// </summary>
-        /// <value>
-        /// The coordinate mapper.
-        /// </value>
+        /// <value> The coordinate mapper. </value>
         public CoordinateMapper CoordinateMapper { get; private set; }
 
         private void _checkCanExecute()
@@ -38,26 +34,19 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="KinectService"/> class.
-        /// this ctor is for the ServiceLocator.Current.GetInstance() to use
+        /// Initializes a new instance of the <see cref="KinectService" /> class. this ctor is for
+        /// the ServiceLocator.Current.GetInstance() to use
         /// </summary>
         [PreferredConstructor]
-        // ReSharper disable once UnusedMember.Global
-        public KinectService() { }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KinectService"/> class.
-        /// </summary>
-        /// <param name="kinectSensor">The kinect sensor.</param>
-        public KinectService(KinectSensor kinectSensor)
+        // ReSharper disable once UnusedMember.Global 
+        public KinectService(KinectSensor kinectSensor = null)
         {
             KinectSensor = kinectSensor;
-
-            CoordinateMapper=new CoordinateMapper(kinectSensor);
         }
 
         /// <summary>
-        /// Occurs when [color image frame ready].
+        /// Occurs when [color image frame ready]. 
         /// </summary>
         public event EventHandler<ColorImageFrameReadyEventArgs> ColorImageFrameReady
         {
@@ -82,7 +71,7 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Occurs when [depth image frame ready].
+        /// Occurs when [depth image frame ready]. 
         /// </summary>
         public event EventHandler<DepthImageFrameReadyEventArgs> DepthImageFrameReady
         {
@@ -107,7 +96,7 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Occurs when [skeleton frame ready].
+        /// Occurs when [skeleton frame ready]. 
         /// </summary>
         public event EventHandler<SkeletonFrameReadyEventArgs> SkeletonFrameReady
         {
@@ -132,7 +121,7 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Occurs when [all frame ready].
+        /// Occurs when [all frame ready]. 
         /// </summary>
         public event EventHandler<AllFramesReadyEventArgs> AllFrameReady
         {
@@ -157,22 +146,22 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Setups the kinect sensor.
+        /// Setups the kinect sensor. 
         /// </summary>
-        /// <param name="colorImageFormat">The color image format.</param>
-        /// <param name="depthImageFormat">The depth image format.</param>
-        /// <param name="transformSmoothParameters">The transform smooth parameters.</param>
+        /// <param name="colorImageFormat">          The color image format. </param>
+        /// <param name="depthImageFormat">          The depth image format. </param>
+        /// <param name="transformSmoothParameters"> The transform smooth parameters. </param>
         public void SetupKinectSensor(ColorImageFormat colorImageFormat,
             DepthImageFormat depthImageFormat, TransformSmoothParameters transformSmoothParameters)
         {
             _checkCanExecute();
 
-            // Setup kinect streams info
+            // Setup kinect streams info 
             KinectSensor.ColorStream.Enable(colorImageFormat);
             KinectSensor.DepthStream.Enable(depthImageFormat);
             KinectSensor.SkeletonStream.Enable(transformSmoothParameters);
 
-            // setup kinect audiosource info
+            // setup kinect audiosource info 
             KinectSensor.AudioSource.BeamAngleMode = BeamAngleMode.Adaptive;
             KinectSensor.AudioSource.NoiseSuppression = true;
             KinectSensor.AudioSource.EchoCancellationMode = EchoCancellationMode.CancellationOnly;
@@ -181,7 +170,7 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Starts the kinect sensor.
+        /// Starts the kinect sensor. 
         /// </summary>
         public void StartKinectSensor()
         {
@@ -191,9 +180,9 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Starts the audio stream.
+        /// Starts the audio stream. 
         /// </summary>
-        /// <param name="timeSpan">The time span.</param>
+        /// <param name="timeSpan"> The time span. </param>
         /// <returns></returns>
         public Stream StartAudioStream(TimeSpan timeSpan)
         {
@@ -203,7 +192,7 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Stops the kinect sensor.
+        /// Stops the kinect sensor. 
         /// </summary>
         public void StopKinectSensor()
         {
@@ -213,24 +202,24 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Initializes this instance.
+        /// Initializes this instance. 
         /// </summary>
         public void Initialize()
         {
-            // while haven't got the sensor, keep fetching
+            // while haven't got the sensor, keep fetching 
             while (KinectSensor == null)
             {
                 System.Threading.Thread.Sleep(200);
                 KinectSensor = (from sensor in KinectSensor.KinectSensors
-                                        where sensor.Status == KinectStatus.Connected
-                                        select sensor).FirstOrDefault();
+                                where sensor.Status == KinectStatus.Connected
+                                select sensor).FirstOrDefault();
             }
 
-            CoordinateMapper=new CoordinateMapper(KinectSensor);
+            CoordinateMapper = new CoordinateMapper(KinectSensor);
         }
 
         /// <summary>
-        /// Initializes the instance asynchronously.
+        /// Initializes the instance asynchronously. 
         /// </summary>
         public void InitializeAsynchronous()
         {
@@ -238,7 +227,7 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Closes this instance.
+        /// Closes this instance. 
         /// </summary>
         public void Close()
         {
