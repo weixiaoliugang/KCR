@@ -3,48 +3,41 @@
 namespace KinectControlRobot.Application.Interface
 {
     /// <summary>
-    /// Interface shows the methods and properties that a MCUService should implement
+    /// Interface shows the methods and properties that a MCUService should implement 
     /// </summary>
     public interface IMCUService
     {
         /// <summary>
-        /// Gets or sets the current mcu.
+        /// Gets or sets the current mcu. 
         /// </summary>
-        /// <value>
-        /// The current mcu.
-        /// </value>
+        /// <value> The current mcu. </value>
         IMCU CurrentMCU { get; }
 
         event Action<MCUState> MCUStateChanged;
 
         /// <summary>
-        /// Initializes this instance.
+        /// Initializes this instance. 
         /// </summary>
         void Initialize();
 
         /// <summary>
-        /// Initializes the instance asynchronously.
+        /// Initializes the instance asynchronously. 
         /// </summary>
         void InitializeAsynchronous();
 
         /// <summary>
-        /// Closes this instance.
+        /// Closes this instance. 
         /// </summary>
         void Close();
 
         /// <summary>
-        /// Starts the mcu.
-        /// </summary>
-        void StartMCU();
-
-        /// <summary>
-        /// Resets the mcu.
+        /// Resets the mcu. 
         /// </summary>
         void ResetMCU();
 
         /// <summary>
-        /// Stops the mcu.
+        /// Stops the mcu. 
         /// </summary>
-        void StopMCU();
+        void DisConnentMCU();
     }
 }

@@ -1,45 +1,47 @@
-﻿using System;
-using System.IO;
-using System.Windows.Media.Imaging;
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Ioc;
+using GalaSoft.MvvmLight.Messaging;
 using KinectControlRobot.Application.Helper;
 using KinectControlRobot.Application.Interface;
-using System.Windows.Media;
-using Microsoft.Kinect;
-using System.Windows;
-using System.Threading.Tasks;
-using GalaSoft.MvvmLight.Ioc;
-using System.Linq;
-using GalaSoft.MvvmLight.Command;
-using Microsoft.Practices.ServiceLocation;
-using GalaSoft.MvvmLight.Messaging;
 using KinectControlRobot.Application.Message;
+using Microsoft.Kinect;
+using Microsoft.Practices.ServiceLocation;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace KinectControlRobot.Application.ViewModel
 {
     /// <summary>
-    /// This class contains properties that the main View can data bind to.
-    /// <para>
-    /// See http://www.galasoft.ch/mvvm
-    /// </para>
+    /// This class contains properties that the main View can data bind to. 
+    /// <para> See http://www.galasoft.ch/mvvm </para>
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
-        // fields for the kinect event handler
+        private const int Framelength = 32;
+
+        // fields for the kinect event handler 
         private IKinectService _kinectService;
-        private Stream _audioStream;
+
         private readonly Int32Rect _rect = new Int32Rect(0, 0, 640, 480);
         private byte _frameCounter;
 
-        // fields for the mcu event handler
+        // fields for the mcu event handler 
         private IMCUService _mcuService;
 
-        // flags indicate the app's atatus
+        // flags indicate the app's atatus 
         private bool _isReady;
+
         private bool _isWorking;
 
 #if DEBUG
-        // this is a class that only unittest would use
+
+        // this is a class that only unittest would use 
         public MainViewModel(IKinectService kinectService, IMCUService mcuService)
         {
             _kinectService = kinectService;
@@ -53,13 +55,16 @@ namespace KinectControlRobot.Application.ViewModel
 
             _isReady = true;
         }
+
 #endif
 
         [PreferredConstructor]
-        // ReSharper disable once UnusedMember.Global
+
+        // ReSharper disable once UnusedMember.Global 
         public MainViewModel()
         {
-            // for the initialize progress may get the kinect sensor, make sure it'll get it until it's really running
+            // for the initialize progress may get the kinect sensor, make sure it'll get it until
+            // it's really running
             if (!IsInDesignModeStatic)
             {
                 _initialize();
@@ -70,16 +75,15 @@ namespace KinectControlRobot.Application.ViewModel
 
         private void _initialize()
         {
-            // get the services in a background thread so it won't block the UI thread
+            // get the services in a background thread so it won't block the UI thread 
             Task.Factory.StartNew(() =>
             {
-                // get the KinectService and the MCUService parallel 
-                // this call is a block one
+                // get the KinectService and the MCUService parallel this call is a block one 
                 Parallel.Invoke(() =>
                 {
                     _kinectService = ServiceLocator.Current.GetInstance<IKinectService>();
 
-                    // this initialize might be blocked
+                    // this initialize might be blocked 
                     _kinectService.Initialize();
                     _kinectService.SetupKinectSensor(ColorImageFormat.RgbResolution640x480Fps30,
                         DepthImageFormat.Resolution640x480Fps30, new TransformSmoothParameters
@@ -92,10 +96,9 @@ namespace KinectControlRobot.Application.ViewModel
                                                                 });
                     _kinectService.AllFrameReady += _onAllFrameReady;
                     _kinectService.StartKinectSensor();
-                    _audioStream = _kinectService.StartAudioStream(new TimeSpan(0, 0, 0, 0, 100));
 
-                    // send the message to tell the whole app that the kinect is ready for the
-                    // might wanna do things with the sensor
+                    // send the message to tell the whole app that the kinect is ready for the might
+                    // wanna do things with the sensor
                     Messenger.Default.Send(new KinectServiceReadyMessage(_kinectService));
 
                     lock (_statusDescriptionLock)
@@ -106,7 +109,7 @@ namespace KinectControlRobot.Application.ViewModel
                 {
                     _mcuService = ServiceLocator.Current.GetInstance<IMCUService>();
 
-                    // this initialize might be blocked
+                    // this initialize might be blocked 
                     _mcuService.Initialize();
                     _mcuService.MCUStateChanged += _onMCUStateChanged;
 
@@ -144,9 +147,8 @@ namespace KinectControlRobot.Application.ViewModel
                 }
             }, () =>
             {
-
-                // use the _frameCounter to make this code run every 1/10 second
-                // for this event is fired every 1/30 second
+                // use the _frameCounter to make this code run every 1/10 second for this event is
+                // fired every 1/30 second
                 if (_isWorking && (++_frameCounter) == 3)
                 {
                     _frameCounter = 0;
@@ -161,7 +163,8 @@ namespace KinectControlRobot.Application.ViewModel
 
                             if (skeleton != null && depthFrame != null)
                             {
-                                // TODO: Create a dataseq that the mcu is supposed to send
+                                // TODO: verify the actually frame length 
+                                var frameToSend = new byte[Framelength];
 
                                 Parallel.Invoke(() =>
                                 {
@@ -188,17 +191,9 @@ namespace KinectControlRobot.Application.ViewModel
                                         mappedHandRight);
 
                                     //TODO: Process data and save it to the list which is supposed to send
-                                }, () =>
-                                {
-                                    var audioData = new byte[3200];
-
-                                    // record current audio data
-                                    _audioStream.Read(audioData, 0, audioData.Length);
-
-                                    // TODO: save it to the send list
                                 });
 
-                                // TODO: send to mcu
+                                // TODO: send to mcu 
                             }
                         }
                     });
@@ -221,7 +216,7 @@ namespace KinectControlRobot.Application.ViewModel
                         {
                             while (_mcuService.CurrentMCU.State != MCUState.SystemNormal)
                             {
-                                // connect mcu and reset robot
+                                // connect mcu and reset robot 
                                 System.Threading.Thread.Sleep(200);
                                 _mcuService.ResetMCU();
                             }
@@ -237,12 +232,14 @@ namespace KinectControlRobot.Application.ViewModel
                             _isReady = true;
                         });
                     break;
+
                 case MCUState.SystemAbnormal:
                     _changeOnMCUError();
 
                     StateCaption = "系统异常";
                     StateDescription = "下位机出现异常";
                     break;
+
                 case MCUState.Working:
                     if (!_isWorking)
                     {
@@ -264,19 +261,20 @@ namespace KinectControlRobot.Application.ViewModel
             _isReady = false;
         }
 
-        #endregion
+        #endregion EventHandler
 
         #region Binding Property
+
         /// <summary>
-        /// The <see cref="StateCaption" /> property's name.
+        /// The <see cref="StateCaption" /> property's name. 
         /// </summary>
         public const string StateCaptionPropertyName = "StateCaption";
 
         private string _stateCaption = "等待连接。。。";
 
         /// <summary>
-        /// Sets and gets the StateCaption property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the StateCaption property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public string StateCaption
         {
@@ -291,15 +289,15 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="StateDescription" /> property's name.
+        /// The <see cref="StateDescription" /> property's name. 
         /// </summary>
         public const string StateDescriptionPropertyName = "StateDescription";
 
         private string _stateDescription = "程序正在尝试连接。。。";
 
         /// <summary>
-        /// Sets and gets the StateDescription property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the StateDescription property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public string StateDescription
         {
@@ -314,15 +312,15 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="StateHelperString" /> property's name.
+        /// The <see cref="StateHelperString" /> property's name. 
         /// </summary>
         public const string StateHelperStringPropertyName = "StateHelperString";
 
         private string _stateHelperString = string.Empty;
 
         /// <summary>
-        /// Sets and gets the StateHelperString property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the StateHelperString property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public string StateHelperString
         {
@@ -337,15 +335,15 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="ViewImage" /> property's name.
+        /// The <see cref="ViewImage" /> property's name. 
         /// </summary>
         public const string ViewImagePropertyName = "ViewImage";
 
         private WriteableBitmap _viewImage = new WriteableBitmap(640, 480, 96, 96, PixelFormats.Bgr32, null);
 
         /// <summary>
-        /// Sets and gets the ViewImage property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the ViewImage property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public WriteableBitmap ViewImage
         {
@@ -360,15 +358,15 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="CameraShadowColor" /> property's name.
+        /// The <see cref="CameraShadowColor" /> property's name. 
         /// </summary>
         public const string CameraShadowColorPropertyName = "CameraShadowColor";
 
         private string _cameraShadowColor = "#FFD7DF01";
 
         /// <summary>
-        /// Sets and gets the CameraShadowColor property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the CameraShadowColor property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public string CameraShadowColor
         {
@@ -383,15 +381,15 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="StateColor" /> property's name.
+        /// The <see cref="StateColor" /> property's name. 
         /// </summary>
         public const string StateColorPropertyName = "StateColor";
 
         private string _stateColor = "#FFD7DF01";
 
         /// <summary>
-        /// Sets and gets the StateColor property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the StateColor property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public string StateColor
         {
@@ -406,15 +404,15 @@ namespace KinectControlRobot.Application.ViewModel
         }
 
         /// <summary>
-        /// The <see cref="ButtonString" /> property's name.
+        /// The <see cref="ButtonString" /> property's name. 
         /// </summary>
         public const string ButtonStringPropertyName = "ButtonString";
 
         private string _buttonString = string.Empty;
 
         /// <summary>
-        /// Sets and gets the ButtonString property.
-        /// Changes to that property's value raise the PropertyChanged event. 
+        /// Sets and gets the ButtonString property. Changes to that property's value raise the
+        /// PropertyChanged event.
         /// </summary>
         public string ButtonString
         {
@@ -428,14 +426,14 @@ namespace KinectControlRobot.Application.ViewModel
             }
         }
 
-        #endregion
+        #endregion Binding Property
 
         #region RelayCommand
 
         private RelayCommand _workCommand;
 
         /// <summary>
-        /// Gets the WorkCommand.
+        /// Gets the WorkCommand. 
         /// </summary>
         public RelayCommand WorkCommand
         {
@@ -472,15 +470,16 @@ namespace KinectControlRobot.Application.ViewModel
                     () => _isReady));
             }
         }
-        #endregion
+
+        #endregion RelayCommand
 
         public override void Cleanup()
         {
-            // Clean up if needed
+            // Clean up if needed 
             _kinectService.StopKinectSensor();
             _kinectService.Close();
 
-            _mcuService.StopMCU();
+            _mcuService.DisConnentMCU();
             _mcuService.Close();
 
             base.Cleanup();
