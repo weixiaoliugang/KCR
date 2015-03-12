@@ -5,8 +5,6 @@ extern u8 Rx_Buff[64];
 extern u8 Rx_Over_Flag;
 
 
-//abc
-
 void USART1_Config(u32  BaudRate )
 {
 	GPIO_InitTypeDef 	GPIO_InitStructure;
