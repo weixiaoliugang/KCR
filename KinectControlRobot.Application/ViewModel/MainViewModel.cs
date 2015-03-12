@@ -1,10 +1,13 @@
-﻿using GalaSoft.MvvmLight;
+﻿using System.Collections.Generic;
+using System.Threading;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 using KinectControlRobot.Application.Helper;
 using KinectControlRobot.Application.Interface;
 using KinectControlRobot.Application.Message;
+using KinectControlRobot.Application.Model;
 using Microsoft.Kinect;
 using Microsoft.Practices.ServiceLocation;
 using System;
@@ -23,8 +26,6 @@ namespace KinectControlRobot.Application.ViewModel
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
-        private const int Framelength = 32;
-
         // fields for the kinect event handler 
         private IKinectService _kinectService;
 
@@ -33,11 +34,13 @@ namespace KinectControlRobot.Application.ViewModel
 
         // fields for the mcu event handler 
         private IMCUService _mcuService;
+        private FrameToSend _haltingFrame = new FrameToSend(FrameToSendFlag.Halting);
 
         // flags indicate the app's atatus 
         private bool _isReady;
 
         private bool _isWorking;
+        private bool _isPreparing;
 
 #if DEBUG
 
@@ -49,9 +52,7 @@ namespace KinectControlRobot.Application.ViewModel
 
             CameraShadowColor = "#FF66B034";
             StateColor = "#FF66B034";
-            StateCaption = "系统就绪";
-            StateDescription = "可以开始准备了";
-            ButtonString = "准备";
+            _setValuesOnSystemReady();
 
             _isReady = true;
         }
@@ -121,12 +122,17 @@ namespace KinectControlRobot.Application.ViewModel
 
                 CameraShadowColor = "#FF66B034";
                 StateColor = "#FF66B034";
-                StateCaption = "系统就绪";
-                StateDescription = "可以开始准备了";
-                ButtonString = "准备";
+                _setValuesOnSystemReady();
 
                 _isReady = true;
             });
+        }
+
+        private void _setValuesOnSystemReady()
+        {
+            StateCaption = "系统就绪";
+            StateDescription = "可以开始准备了";
+            ButtonString = "准备";
         }
 
         #region EventHandler
@@ -147,58 +153,96 @@ namespace KinectControlRobot.Application.ViewModel
                 }
             }, () =>
             {
-                // use the _frameCounter to make this code run every 1/10 second for this event is
-                // fired every 1/30 second
-                if (_isWorking && (++_frameCounter) == 3)
+                if (_isWorking)
                 {
-                    _frameCounter = 0;
-
-                    Task.Factory.StartNew(() =>
+                    // use the _frameCounter to make this code run every 1/10 second for this event is
+                    // fired every 1/30 second
+                    if ((++_frameCounter) == 3)
                     {
-                        using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
-                        using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+                        _frameCounter = 0;
+
+                        Task.Factory.StartNew(() =>
                         {
-                            var skeleton = skeletonFrame.GetSkeletons()
-                                 .FirstOrDefault(s => s.TrackingState == SkeletonTrackingState.Tracked);
-
-                            if (skeleton != null && depthFrame != null)
+                            using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
+                            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
                             {
-                                // TODO: verify the actually frame length 
-                                var frameToSend = new byte[Framelength];
+                                var skeleton = skeletonFrame.GetSkeletons()
+                                     .FirstOrDefault(s => s.TrackingState == SkeletonTrackingState.Tracked);
 
-                                Parallel.Invoke(() =>
+                                if (skeleton != null && depthFrame != null)
                                 {
-                                    var leftBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
-                                        BodySide.Left);
-                                    var rightBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
-                                        BodySide.Right);
+                                    var frameToSend = new FrameToSend(FrameToSendFlag.Performing);
 
-                                    //TODO: Process data and save it to the list which is supposed to send
-                                }, () =>
-                                {
-                                    var mappedHandLeft =
-                                        _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(
-                                            skeleton.Joints[JointType.HandLeft].Position,
-                                            _kinectService.KinectSensor.DepthStream.Format);
-                                    var mappedHandRight =
-                                        _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(
-                                            skeleton.Joints[JointType.HandRight].Position,
-                                            _kinectService.KinectSensor.DepthStream.Format);
+                                    Parallel.Invoke(() =>
+                                    {
+                                        var leftBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
+                                            BodySide.Left);
+                                        var rightBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
+                                            BodySide.Right);
 
-                                    var isHandLeftOpen = BodyStateDetector.IsHandOpen(depthFrame,
-                                        mappedHandLeft);
-                                    var isHandRightOpen = BodyStateDetector.IsHandOpen(depthFrame,
-                                        mappedHandRight);
+                                        //TODO: Process data and save it to the list which is supposed to send
+                                    }, () =>
+                                    {
+                                        var mappedHandLeft =
+                                            _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(
+                                                skeleton.Joints[JointType.HandLeft].Position,
+                                                _kinectService.KinectSensor.DepthStream.Format);
+                                        var mappedHandRight =
+                                            _kinectService.CoordinateMapper.MapSkeletonPointToDepthPoint(
+                                                skeleton.Joints[JointType.HandRight].Position,
+                                                _kinectService.KinectSensor.DepthStream.Format);
 
-                                    //TODO: Process data and save it to the list which is supposed to send
-                                });
+                                        var isHandLeftOpen = BodyStateDetector.IsHandOpen(depthFrame,
+                                            mappedHandLeft);
+                                        var isHandRightOpen = BodyStateDetector.IsHandOpen(depthFrame,
+                                            mappedHandRight);
 
-                                // TODO: send to mcu 
+                                        //TODO: Process data and save it to the list which is supposed to send
+                                    });
+
+                                    _mcuService.SendFrame(frameToSend);
+                                }
+                            }
+                        });
+                    }
+                }
+                else if (_isPreparing)
+                {
+                    using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+                    {
+                        var skeleton = skeletonFrame.GetSkeletons()
+                             .FirstOrDefault(s => s.TrackingState == SkeletonTrackingState.Tracked);
+
+                        if (skeleton != null)
+                        {
+                            var leftBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
+                                BodySide.Left);
+                            var rightBodyState = BodyStateDetector.GetAngleAndRotation(skeleton,
+                                BodySide.Right);
+
+                            if (PersonIsReady(leftBodyState,rightBodyState))
+                            {
+                                StateCaption = "正在工作";
+                                StateDescription = "系统正常运行";
+
+                                ButtonString = "停止";
+
+                                _isWorking = true;
                             }
                         }
-                    });
+                    }
+                }
+                else
+                {
+                    // send halting frame to mcu to stop the movement
+                    _mcuService.SendFrame(_haltingFrame);
                 }
             });
+        }
+
+        private bool PersonIsReady(List<double> leftBodyState, List<double> rightBodyState)
+        {
+            //todo: TEST DATA
         }
 
         private void _onMCUStateChanged(MCUState mcuState)
@@ -223,11 +267,9 @@ namespace KinectControlRobot.Application.ViewModel
 
                             CameraShadowColor = "#FF66B034";
                             StateColor = "#FF66B034";
-                            StateCaption = "系统就绪";
-                            StateDescription = "可以开始准备了";
                             StateHelperString = string.Empty;
 
-                            ButtonString = "准备";
+                            _setValuesOnSystemReady();
 
                             _isReady = true;
                         });
@@ -450,21 +492,21 @@ namespace KinectControlRobot.Application.ViewModel
 
                         if (_isWorking)
                         {
+                            // pause the app for 500ms, so the mcu could reset all the motor to the right position
+                            Thread.Sleep(500);
+
                             _isWorking = false;
 
-                            StateCaption = "系统就绪";
-                            StateDescription = "可以开始准备了";
-
-                            ButtonString = "准备";
+                            _setValuesOnSystemReady();
                         }
                         else
                         {
-                            _isWorking = true;
-
-                            StateCaption = "正在工作";
-                            StateDescription = "系统正常运行";
+                            StateCaption = "请准备";
+                            StateDescription = "请保证双臂自然下垂";
 
                             ButtonString = "停止";
+
+                            _isPreparing = true;
                         }
                     },
                     () => _isReady));

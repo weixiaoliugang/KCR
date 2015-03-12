@@ -79,6 +79,13 @@ namespace KinectControlRobot.Application.Service
             Task.Factory.StartNew(Initialize);
         }
 
+        public void SendFrame(FrameToSend frameToSend)
+        {
+            _checkCanExecute();
+
+            MCU.WriteAllBytes(frameToSend.ToBytes());
+        }
+
         /// <summary>
         /// Closes this instance. 
         /// </summary>

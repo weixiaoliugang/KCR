@@ -1,4 +1,5 @@
 ﻿using System;
+using KinectControlRobot.Application.Model;
 
 namespace KinectControlRobot.Application.Interface
 {
@@ -22,6 +23,12 @@ namespace KinectControlRobot.Application.Interface
         /// Initializes the instance asynchronously. 
         /// </summary>
         void InitializeAsynchronous();
+
+        /// <summary>
+        /// Sends the frame.
+        /// </summary>
+        /// <param name="frameToSend">The frame to send.</param>
+        void SendFrame(FrameToSend frameToSend);
 
         /// <summary>
         /// Closes this instance. 
