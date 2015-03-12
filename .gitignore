@@ -155,6 +155,24 @@ $RECYCLE.BIN/
 # Mac desktop service store files
 .DS_Store
 
+# Keil
+*.log
+*.plg
+*.bak
+*.dep
+*.uvgui.*
+JLinkLog.txt
+*.o
+*.d
+*.crf
+*.tra
+*.axf
+*.hex
+*.lnp
+*.sct
+*.__i
+*.htm
+
 /CustomChrome
 /Experimental
 <<<<<<< HEAD
