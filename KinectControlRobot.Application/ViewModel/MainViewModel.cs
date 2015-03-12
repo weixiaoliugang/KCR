@@ -214,7 +214,7 @@ namespace KinectControlRobot.Application.ViewModel
 
                     Task.Factory.StartNew(() =>
                         {
-                            while (_mcuService.CurrentMCU.State != MCUState.SystemNormal)
+                            while (_mcuService.MCU.State != MCUState.SystemNormal)
                             {
                                 // connect mcu and reset robot 
                                 System.Threading.Thread.Sleep(200);

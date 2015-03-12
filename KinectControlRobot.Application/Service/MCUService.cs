@@ -19,11 +19,11 @@ namespace KinectControlRobot.Application.Service
         /// Gets or sets the current mcu. 
         /// </summary>
         /// <value> The current mcu. </value>
-        public IMCU CurrentMCU { get; private set; }
+        public IMCU MCU { get; private set; }
 
         private void _checkCanExecute()
         {
-            if (CurrentMCU == null || CurrentMCU.State != MCUState.SystemNormal)
+            if (MCU == null)
             {
                 throw new InvalidOperationException();
             }
@@ -40,7 +40,7 @@ namespace KinectControlRobot.Application.Service
         [PreferredConstructor]
         public MCUService(string serialPortName = "COM3", IMCU mcu = null)
         {
-            CurrentMCU = mcu ?? new MCU(serialPortName);
+            MCU = mcu ?? new MCU(serialPortName);
         }
 
         private void _startQueryMCUState()
@@ -48,10 +48,10 @@ namespace KinectControlRobot.Application.Service
             _checkCanExecute();
 
             // call the lambda expression each tick 
-            var checkStateTimer = new Timer(200);
+            var checkStateTimer = new Timer(500);
             checkStateTimer.Elapsed += (o, e) =>
             {
-                MCUState currMCUState = CurrentMCU.State;
+                MCUState currMCUState = MCU.State;
                 if (currMCUState != _lastState)
                 {
                     Action<MCUState> handler = MCUStateChanged;
@@ -85,7 +85,7 @@ namespace KinectControlRobot.Application.Service
         {
             _checkCanExecute();
 
-            CurrentMCU.DisConnect();
+            MCU.DisConnect();
         }
 
         /// <summary>
@@ -93,14 +93,14 @@ namespace KinectControlRobot.Application.Service
         /// </summary>
         public void Initialize()
         {
-            CurrentMCU.Connect();
+            MCU.Connect();
 
             do
             {
-                System.Threading.Thread.Sleep(200);
-            } while (CurrentMCU.State != MCUState.SystemNormal);
+                System.Threading.Thread.Sleep(500);
+            } while (MCU.State != MCUState.SystemNormal);
 
-            _lastState = CurrentMCU.State;
+            _lastState = MCU.State;
             _startQueryMCUState();
         }
 
@@ -117,7 +117,7 @@ namespace KinectControlRobot.Application.Service
         /// </summary>
         public void Close()
         {
-            CurrentMCU = null;
+            MCU = null;
         }
     }
 }
