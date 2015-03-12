@@ -82,6 +82,7 @@
     <Compile Include="Interface\IMCUService.cs" />
     <Compile Include="Message\KinectServiceReadyMessage.cs" />
     <Compile Include="Model\Frame.cs" />
+    <Compile Include="Interface\IFrameToSend.cs" />
     <Compile Include="Model\MCU.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\KinectService.cs" />

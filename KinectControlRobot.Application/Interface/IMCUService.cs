@@ -13,8 +13,6 @@ namespace KinectControlRobot.Application.Interface
         /// <value> The current mcu. </value>
         IMCU MCU { get; }
 
-        event Action<MCUState> MCUStateChanged;
-
         /// <summary>
         /// Initializes this instance. 
         /// </summary>

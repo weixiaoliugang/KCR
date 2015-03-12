@@ -10,6 +10,13 @@ namespace KinectControlRobot.Application.Model
     public class MCU : IMCU, IDisposable
     {
         private readonly SerialPort _serialPort;
+        private MCUState _lastState;
+
+
+        /// <summary>
+        /// Occurs when [mcu State changed]. 
+        /// </summary>
+        public event Action<MCUState> StateChanged;
 
         /// <summary>
         /// Gets the State. 
@@ -32,7 +39,38 @@ namespace KinectControlRobot.Application.Model
 
         private void _onSerialPortDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            // TODO: assign State when received mcu reporting 
+            if (_serialPort.BytesToRead == 32)
+            {
+                var buffer = new byte[32];
+                _serialPort.Read(buffer, 0, 32);
+                var receivedFrame = new ReceivedFrame(buffer);
+
+                switch (receivedFrame.Parse())
+                {
+                    case ReceivedFrameFlag.SystemNormal:
+                        State = MCUState.SystemNormal; break;
+                    case ReceivedFrameFlag.ShakingHand:
+                        break;
+                    case ReceivedFrameFlag.SystemAbnormal:
+                        State = MCUState.SystemAbnormal; break;
+                    case ReceivedFrameFlag.Working:
+                        State = MCUState.Working; break;
+                    case ReceivedFrameFlag._Broken_:
+                        break;
+                }
+
+                var currMCUState = State;
+                if (currMCUState != _lastState)
+                {
+                    Action<MCUState> handler = StateChanged;
+                    if (handler != null)
+                    {
+                        handler(currMCUState);
+                    }
+
+                    _lastState = currMCUState;
+                }
+            }
         }
 
         /// <summary>
@@ -41,6 +79,9 @@ namespace KinectControlRobot.Application.Model
         public void Connect()
         {
             _serialPort.Open();
+
+            var requestingFrame = new FrameToSend(FrameToSendFlag.Requesting);
+            WriteAllBytes(requestingFrame.ToBytes());
         }
 
         /// <summary>

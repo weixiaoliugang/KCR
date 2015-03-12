@@ -13,8 +13,6 @@ namespace KinectControlRobot.Application.Service
     /// </summary>
     public class MCUService : IMCUService
     {
-        private MCUState _lastState;
-
         /// <summary>
         /// Gets or sets the current mcu. 
         /// </summary>
@@ -30,40 +28,12 @@ namespace KinectControlRobot.Application.Service
         }
 
         /// <summary>
-        /// Occurs when [mcu State changed]. 
-        /// </summary>
-        public event Action<MCUState> MCUStateChanged;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MCUService" /> class. 
         /// </summary>
         [PreferredConstructor]
         public MCUService(string serialPortName = "COM3", IMCU mcu = null)
         {
             MCU = mcu ?? new MCU(serialPortName);
-        }
-
-        private void _startQueryMCUState()
-        {
-            _checkCanExecute();
-
-            // call the lambda expression each tick 
-            var checkStateTimer = new Timer(500);
-            checkStateTimer.Elapsed += (o, e) =>
-            {
-                MCUState currMCUState = MCU.State;
-                if (currMCUState != _lastState)
-                {
-                    Action<MCUState> handler = MCUStateChanged;
-                    if (handler != null)
-                    {
-                        handler(currMCUState);
-                    }
-
-                    _lastState = currMCUState;
-                }
-            };
-            checkStateTimer.Start();
         }
 
         /// <summary>
@@ -99,9 +69,6 @@ namespace KinectControlRobot.Application.Service
             {
                 System.Threading.Thread.Sleep(500);
             } while (MCU.State != MCUState.SystemNormal);
-
-            _lastState = MCU.State;
-            _startQueryMCUState();
         }
 
         /// <summary>

@@ -6,7 +6,7 @@ using KinectControlRobot.Application.Interface;
 
 namespace KinectControlRobot.Application.Model
 {
-    public struct FrameToSend
+    public struct FrameToSend : IFrameToSend
     {
         static readonly byte[] Head = new byte[12];
         static readonly byte[] Control = new byte[64];
@@ -32,7 +32,7 @@ namespace KinectControlRobot.Application.Model
         }
     }
 
-    public struct ReceivedFrame
+    public struct ReceivedFrame : IReceivedFrame
     {
         static readonly byte[] Head = new byte[12];
         static readonly byte[] State = new byte[1];

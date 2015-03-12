@@ -1,10 +1,17 @@
-﻿namespace KinectControlRobot.Application.Interface
+﻿using System;
+
+namespace KinectControlRobot.Application.Interface
 {
     /// <summary>
     /// Interface shows a MCU should implement 
     /// </summary>
     public interface IMCU
     {
+        /// <summary>
+        /// Occurs when [state changed].
+        /// </summary>
+        event Action<MCUState> StateChanged;
+
         /// <summary>
         /// Gets the State. 
         /// </summary>

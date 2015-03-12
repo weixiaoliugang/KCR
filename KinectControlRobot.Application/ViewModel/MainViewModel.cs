@@ -94,7 +94,7 @@ namespace KinectControlRobot.Application.ViewModel
                                                                     JitterRadius = 0.05f,
                                                                     MaxDeviationRadius = 0.04f
                                                                 });
-                    _kinectService.AllFrameReady += _onAllFrameReady;
+                    _kinectService.KinectSensor.AllFramesReady += _onAllFrameReady;
                     _kinectService.StartKinectSensor();
 
                     // send the message to tell the whole app that the kinect is ready for the might
@@ -111,7 +111,7 @@ namespace KinectControlRobot.Application.ViewModel
 
                     // this initialize might be blocked 
                     _mcuService.Initialize();
-                    _mcuService.MCUStateChanged += _onMCUStateChanged;
+                    _mcuService.MCU.StateChanged += _onMCUStateChanged;
 
                     lock (_statusDescriptionLock)
                     {

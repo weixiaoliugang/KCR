@@ -26,26 +26,6 @@ namespace KinectControlRobot.Application.Interface
         CoordinateMapper CoordinateMapper { get; }
 
         /// <summary>
-        /// Occurs when [color image frame ready].
-        /// </summary>
-        event EventHandler<ColorImageFrameReadyEventArgs> ColorImageFrameReady;
-
-        /// <summary>
-        /// Occurs when [depth image frame ready].
-        /// </summary>
-        event EventHandler<DepthImageFrameReadyEventArgs> DepthImageFrameReady;
-
-        /// <summary>
-        /// Occurs when [skeleton frame ready].
-        /// </summary>
-        event EventHandler<SkeletonFrameReadyEventArgs> SkeletonFrameReady;
-
-        /// <summary>
-        /// Occurs when [all frame ready].
-        /// </summary>
-        event EventHandler<AllFramesReadyEventArgs> AllFrameReady;
-
-        /// <summary>
         /// Setups the kinect sensor.
         /// </summary>
         /// <param name="colorImageFormat">The color image format.</param>
