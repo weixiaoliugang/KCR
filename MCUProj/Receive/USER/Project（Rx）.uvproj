@@ -442,6 +442,11 @@
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f10x_exti.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWLIB\src\stm32f10x_tim.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -481,6 +486,11 @@
               <FileName>EXIT.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\EXIT.c</FilePath>
+            </File>
+            <File>
+              <FileName>PWM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\PWM.c</FilePath>
             </File>
           </Files>
         </Group>

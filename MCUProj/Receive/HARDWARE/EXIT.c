@@ -2,8 +2,8 @@
 #include <stm32f10x.h>
 #include "NRF2401L.h"
 
-extern u8 RxBuf[32];
-
+extern u8 Rx_Buf[96];
+extern u8 count;
 
 void EXIT_Init(void)
 {
@@ -38,7 +38,12 @@ void EXTI9_5_IRQHandler(void)
 {	
 	if(EXTI_GetITStatus(EXTI_Line8)==SET)
 	{
-		NRF24L01_RxPacket(RxBuf);
+		switch(count)
+		{
+			case 0:NRF24L01_RxPacket(Rx_Buf);count++;break;
+			case 1:NRF24L01_RxPacket(Rx_Buf+32);count++;break;
+			case 2:NRF24L01_RxPacket(Rx_Buf+64);count=0;break;		
+    }  		
 		EXTI_ClearITPendingBit(EXTI_Line8);//清除中断标志位，避免多次进入中断	
 	}
 }

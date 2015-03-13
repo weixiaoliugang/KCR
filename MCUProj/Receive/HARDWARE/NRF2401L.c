@@ -1,8 +1,6 @@
 #include "NRF2401L.h"
 #include "spi.h"
- 
-extern u32 count1;
-extern u8 flag;
+
 const u8 TX_ADDRESS[TX_ADR_WIDTH]={0x34,0x43,0x10,0x10,0x01}; //·¢ËÍµØÖ·
 const u8 RX_ADDRESS[RX_ADR_WIDTH]={0x34,0x43,0x10,0x10,0x01}; //·¢ËÍµØÖ·
 
@@ -153,35 +151,18 @@ u8 NRF24L01_TxPacket(u8 *txbuf)
 //·µ»ØÖµ:0£¬½ÓÊÕÍê³É£»ÆäËû£¬´íÎó´úÂë
 u8 NRF24L01_RxPacket(u8 *rxbuf)
 {
-	u8 iaaaa = 0;
 	
-	u8 sta,sta1,sta2,sta3;
-	flag=1;
+	u8 sta;
 	SPI2_SetSpeed(SPI_BaudRatePrescaler_8); //spiËÙ¶ÈÎª9Mhz£¨24L01µÄ×î´óSPIÊ±ÖÓÎª10Mhz£©   
 	sta=NRF24L01_Read_Reg(STATUS);  //¶ÁÈ¡×´Ì¬¼Ä´æÆ÷µÄÖµ 
 	NRF24L01_Write_Reg(WRITE_REG_NRF+STATUS,(sta&0xf1));//Çå³ıTX_DS»òMAX_RTÖĞ¶Ï±êÖ¾(ºÜÖØÒª£¬Ä¿µÄ£ºÓĞ0x00±äÎª0x0e)
 	if(sta&RX_OK)//½ÓÊÕµ½Êı¾İ
 	{		
 		NRF24L01_Read_Buf(RD_RX_PLOAD,rxbuf,RX_PLOAD_WIDTH);//¶ÁÈ¡Êı¾
-		
-		//sta1=NRF24L01_Read_Reg(NRF_FIFO_STATUS);
-		
 		NRF24L01_Write_Reg(FLUSH_RX,0xff);//Çå³ıRX FIFO¼Ä´æÆ÷ 
 		sta=NRF24L01_Read_Reg(STATUS);  //¶ÁÈ¡×´Ì¬¼Ä´æÆ÷µÄÖµ 
 	  sta&=0xf1;//(ºÜÖØÒª£¬Ä¿µÄ£ºÓĞ0x00±äÎª0x0e)
-	  NRF24L01_Write_Reg(WRITE_REG_NRF+STATUS,sta);//Çå³ıTX_DS»òMAX_RTÖĞ¶Ï±êÖ¾
-		
-    //sta2=	NRF24L01_Read_Reg(NRF_FIFO_STATUS);	
-		//sta3= NRF24L01_Read_Reg(STATUS);
-		
-		for(iaaaa=0; iaaaa < 32; iaaaa++)
-		{
-			if(rxbuf[iaaaa] != 'a')
-				count1 = 0xffff0000;
-}
-		
-		count1++;
-		return 0; 
+	  NRF24L01_Write_Reg(WRITE_REG_NRF+STATUS,sta);//Çå³ıTX_DS»òMAX_RTÖĞ¶Ï±êÖ¾	
 		
 	}	   
 	return 1;//Ã»ÊÕµ½ÈÎºÎÊı¾İ
