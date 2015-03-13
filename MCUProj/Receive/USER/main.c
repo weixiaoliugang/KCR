@@ -4,8 +4,7 @@
 #include "PWM.h"
 
 u8 Rx_Buf[96];
-u8 count;
-//u8 Control_Buf[96];
+u8 Rx_Flag_Over=0;   //接受完成标志
 
 int main()
 {
@@ -19,14 +18,16 @@ int main()
 	
 	while(1)
 	{
-		if(count==0)
+		if(Rx_Flag_Over==1)
 		{
+			Rx_Flag_Over=0;
 			switch(Rx_Buf[10])
 			{
-				case 0x00:Reset_Duoji();break;
-				case 0xf0:Reset_Duoji();break;
-				case 0x0f:Control_Duoji(Rx_Buf);break;
-				default:  break;
+				case 0x00:Reset_Duoji();break;    //
+				case 0xf0:Reset_Duoji();break;  //停止信号，复位舵机
+				case 0x0f:Control_Duoji(Rx_Buf);Rx_Flag_Over=0;break;    //有效的控制信号，控制舵机
+				default:break;
+				
       }
 			
     }

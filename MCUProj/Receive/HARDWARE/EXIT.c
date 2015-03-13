@@ -3,7 +3,7 @@
 #include "NRF2401L.h"
 
 extern u8 Rx_Buf[96];
-extern u8 count;
+extern u8 Rx_Flag_Over;
 
 void EXIT_Init(void)
 {
@@ -36,14 +36,16 @@ void EXIT_Init(void)
 
 void EXTI9_5_IRQHandler(void)
 {	
+	static u8 count=0;
 	if(EXTI_GetITStatus(EXTI_Line8)==SET)
 	{
-		switch(count)
+		switch(count)                       //三次接受组成一帧
 		{
 			case 0:NRF24L01_RxPacket(Rx_Buf);count++;break;
 			case 1:NRF24L01_RxPacket(Rx_Buf+32);count++;break;
-			case 2:NRF24L01_RxPacket(Rx_Buf+64);count=0;break;		
+			case 2:NRF24L01_RxPacket(Rx_Buf+64);count=0;Rx_Flag_Over=1;break;		
     }  		
+		
 		EXTI_ClearITPendingBit(EXTI_Line8);//清除中断标志位，避免多次进入中断	
 	}
 }

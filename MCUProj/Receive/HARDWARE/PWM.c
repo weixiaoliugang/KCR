@@ -26,7 +26,7 @@ void TIM3_GPIO_Config()
 	GPIO_InitStructure.GPIO_Pin=GPIO_Pin_0|GPIO_Pin_1;     //GPIOB.0->TIM3_CH3,GPIOB.1->TIM3_CH4
 	GPIO_Init(GPIOB,&GPIO_InitStructure);
 }
-
+//默认的占空比的初始值要改（复位状态）
 void TIM3_Mode_Config()
 {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
@@ -127,15 +127,44 @@ void TIM4_Mode_Config()
 	
 
 }
+
+//将占空比改变为初始状态（复位值）
 void Reset_Duoji()
 {
+	 TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
+   TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
+	 TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
+   TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
+
+   TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
+   TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
+	 TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
+   TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
 	
-	///////////////////////////////////////////////////////
 }
 
 void Control_Duoji(u8 *Control_Duoji)//解包控制舵机函数
 {
-	////////////////////////////////////////////////////////
+	//左臂
+	 TIM3_CCR1_VAL=Control_Duoji[18];    //手   
+	 TIM3_CCR2_VAL=Control_Duoji[17];   //肘子   
+	 TIM3_CCR3_VAL=Control_Duoji[15];   //肩部横向     
+	 TIM3_CCR4_VAL=Control_Duoji[16];   //肩部纵向      
+  //右臂
+	 TIM4_CCR1_VAL=Control_Duoji[26];     //手 
+	 TIM4_CCR2_VAL=Control_Duoji[25];     //肘子 
+	 TIM4_CCR3_VAL=Control_Duoji[23];    //肩部横向   
+	 TIM4_CCR4_VAL=Control_Duoji[24];	//肩部纵向 
+	
+   TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
+   TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
+	 TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
+   TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
+
+   TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
+   TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
+	 TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
+   TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
 }
 
 void  TIM3_Init()

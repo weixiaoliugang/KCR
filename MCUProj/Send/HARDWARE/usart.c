@@ -2,8 +2,7 @@
 #include "nrf2401l.h"
 
 extern u8 Rx_Buff[64];
-extern u8 Rx_Over_Flag;
-
+extern u8 Tx_Flag_Over;
 
 void USART1_Config(u32  BaudRate )
 {
@@ -53,15 +52,15 @@ void USART1_IRQHandler(void)
 
 	if(USART_GetITStatus(USART1,USART_IT_RXNE)==SET)
 	{
-		if(count<64)
+		if(count<96)
 		{
 			while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)==RESET);//等待接受完成	
-			Rx_Buff[count]=((USART_ReceiveData(USART1))&0xff);	
+			Rx_Buff[count]=(USART_ReceiveData(USART1));	
       count++;			
-			if(count==64)
+			if(count==96)
 			{ 
 				count=0;
-				Rx_Over_Flag=1;
+				Tx_Flag_Over=1;  //一帧数据接收完毕
 							
       }			
 		}	

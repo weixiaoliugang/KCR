@@ -2,10 +2,9 @@
 #include "usart.h"
 #include "nrf2401l.h"
 
-u8 Rx_Over_Flag=0;
-u8 Rx_Buf[64];//接受的数据包
-//u8 Rx_Buf1[64];//备份数据包
-u8 Tx_Buf[64];//用于发送的数据包
+u8 Tx_Buf[96];         //用于发送的数据包
+u8 Tx_Flag_Over=0;     //接受结束标志位
+
 
 int main()
 {
@@ -16,16 +15,20 @@ int main()
 		
 	while(1)
 	{
-		if(Rx_Over_Flag==1)
+		if(Tx_Flag_Over==1)
 		{
-			switch(Rx_Buf[10])//检查第十一位是什么信号
+			Tx_Flag_Over=0;
+			switch(Tx_Buf[10])
 			{
-				case 0x00:;     //请求
-        case 0x0f:;      //开始
-        case 0xf0:;      //停止
+				case 0x00:NRF24L01_TxPacket(Tx_Buf);NRF24L01_TxPacket(Tx_Buf+32);NRF24L01_TxPacket(Tx_Buf+64);break;
+				case 0x0f:NRF24L01_TxPacket(Tx_Buf);NRF24L01_TxPacket(Tx_Buf+32);NRF24L01_TxPacket(Tx_Buf+64);break;
+				case 0xf0:NRF24L01_TxPacket(Tx_Buf);NRF24L01_TxPacket(Tx_Buf+32);NRF24L01_TxPacket(Tx_Buf+64);break;
+				default:break; 
       }
 			
+			
+			
     }
-  }
+	}
 	
 }

@@ -162,7 +162,8 @@ u8 NRF24L01_RxPacket(u8 *rxbuf)
 		NRF24L01_Write_Reg(FLUSH_RX,0xff);//Çå³ıRX FIFO¼Ä´æÆ÷ 
 		sta=NRF24L01_Read_Reg(STATUS);  //¶ÁÈ¡×´Ì¬¼Ä´æÆ÷µÄÖµ 
 	  sta&=0xf1;//(ºÜÖØÒª£¬Ä¿µÄ£ºÓĞ0x00±äÎª0x0e)
-	  NRF24L01_Write_Reg(WRITE_REG_NRF+STATUS,sta);//Çå³ıTX_DS»òMAX_RTÖĞ¶Ï±êÖ¾	
+	  NRF24L01_Write_Reg(WRITE_REG_NRF+STATUS,sta);//Çå³ıTX_DS»òMAX_RTÖĞ¶Ï±êÖ
+		return 0;
 		
 	}	   
 	return 1;//Ã»ÊÕµ½ÈÎºÎÊı¾İ
