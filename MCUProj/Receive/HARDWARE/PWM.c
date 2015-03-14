@@ -26,7 +26,7 @@ void TIM3_GPIO_Config()
 	GPIO_InitStructure.GPIO_Pin=GPIO_Pin_0|GPIO_Pin_1;     //GPIOB.0->TIM3_CH3,GPIOB.1->TIM3_CH4
 	GPIO_Init(GPIOB,&GPIO_InitStructure);
 }
-//默认的占空比的初始值要改（复位状态）
+//默认的占空比的初始值要改（复位状态）////////////////////////////////////////////////////////////
 void TIM3_Mode_Config()
 {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
@@ -70,7 +70,7 @@ void TIM3_Mode_Config()
 	
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+
 
 void TIM4_GPIO_Config()
 {
@@ -83,7 +83,7 @@ void TIM4_GPIO_Config()
   GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB,&GPIO_InitStructure);
 }
-
+//////////////////////////////////////初始值///////////////////////////////////////////////////////
 void TIM4_Mode_Config()
 {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
@@ -128,7 +128,7 @@ void TIM4_Mode_Config()
 
 }
 
-//将占空比改变为初始状态（复位值）
+//将占空比改变为初始状态（复位值）////////////////////////////////////////////
 void Reset_Duoji()
 {
 	 TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	

@@ -130,7 +130,7 @@ u8 NRF24L01_TxPacket(u8 *txbuf)
 	NRF24L01_CE_Low;
   NRF24L01_Write_Buf(WR_TX_PLOAD,txbuf,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	NRF24L01_CE_High;//启动发送	   
-	while(NRF24L01_IRQ!=0);//等待发送完成
+	//while(NRF24L01_IRQ!=0);//等待发送完成/////////////////////////////////////////////////////////
 	sta=NRF24L01_Read_Reg(STATUS);  //读取状态寄存器的值 
 	sta&=0xf1;//(很重要，目的：有0x00变为0x0e)
 	NRF24L01_Write_Reg(WRITE_REG_NRF+STATUS,sta);//清除TX_DS或MAX_RT中断标志
@@ -188,7 +188,7 @@ void NRF24L01_RX_Mode(void)
   	NRF24L01_Write_Reg(WRITE_REG_NRF+RF_CH,40);	     //设置RF通信频率		  
   	NRF24L01_Write_Reg(WRITE_REG_NRF+RX_PW_P0,RX_PLOAD_WIDTH);//选择通道0的有效数据宽度 	    
   	NRF24L01_Write_Reg(WRITE_REG_NRF+RF_SETUP,0x0f);//设置TX发射参数,0db增益,2Mbps,低噪声增益开启 
-  	NRF24L01_Write_Reg(WRITE_REG_NRF+CONFIG, 0x0f);//配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式，打开所有中断
+  	NRF24L01_Write_Reg(WRITE_REG_NRF+CONFIG, 0x3f);//配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式，关闭发送中断
   	NRF24L01_CE_High; //CE为高,进入接收模式 
 }	
 
@@ -212,7 +212,7 @@ void NRF24L01_TX_Mode(void)
   	NRF24L01_Write_Reg(WRITE_REG_NRF+SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
   	NRF24L01_Write_Reg(WRITE_REG_NRF+RF_CH,40);       //设置RF通道为40
   	NRF24L01_Write_Reg(WRITE_REG_NRF+RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
-  	NRF24L01_Write_Reg(WRITE_REG_NRF+CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,发送模式，打开所有中断
+  	NRF24L01_Write_Reg(WRITE_REG_NRF+CONFIG,0x3e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,发送模式，关闭发送中断
 	  NRF24L01_CE_High;//CE为高,10us后启动发送
 }		   
 

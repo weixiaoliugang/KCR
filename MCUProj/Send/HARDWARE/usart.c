@@ -1,7 +1,7 @@
 #include "stm32f10x.h"
 #include "nrf2401l.h"
 
-extern u8 Rx_Buff[64];
+extern u8 Tx_Buf[96];
 extern u8 Tx_Flag_Over;
 
 void USART1_Config(u32  BaudRate )
@@ -29,13 +29,13 @@ void USART1_Config(u32  BaudRate )
 	USART_InitStructure.USART_StopBits = USART_StopBits_1; 
 	USART_InitStructure.USART_Parity = USART_Parity_No; 
 	USART_InitStructure.USART_HardwareFlowControl =USART_HardwareFlowControl_None; 
-	USART_InitStructure.USART_Mode =USART_Mode_Rx; 
+	USART_InitStructure.USART_Mode =USART_Mode_Rx|USART_Mode_Tx; //收发模式
 	USART_Init(USART1, &USART_InitStructure);
 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);//配置主优先级的位1，优先级的位数3	
 	NVIC_InitStructure.NVIC_IRQChannel=USART1_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority=0;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0x00;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority=0x00;
 	NVIC_InitStructure.NVIC_IRQChannelCmd=ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	
@@ -55,7 +55,7 @@ void USART1_IRQHandler(void)
 		if(count<96)
 		{
 			while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)==RESET);//等待接受完成	
-			Rx_Buff[count]=(USART_ReceiveData(USART1));	
+			Tx_Buf[count]=(USART_ReceiveData(USART1));	
       count++;			
 			if(count==96)
 			{ 

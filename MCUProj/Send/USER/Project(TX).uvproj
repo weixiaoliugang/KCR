@@ -422,6 +422,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\SPI.c</FilePath>
             </File>
+            <File>
+              <FileName>EXIT.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\EXIT.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
