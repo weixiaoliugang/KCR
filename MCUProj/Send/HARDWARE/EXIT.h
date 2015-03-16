@@ -5,7 +5,8 @@
 
 
 void EXIT_Init(void);//外部中断初始化程序
- 
+void EXIT_Disable(void);
+void EXIT_Enable(void);
  				  	    													  
 		 
 #endif

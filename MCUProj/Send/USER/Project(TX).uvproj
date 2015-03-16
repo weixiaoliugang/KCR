@@ -427,6 +427,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\EXIT.c</FilePath>
             </File>
+            <File>
+              <FileName>SYSTEM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\SYSTEM.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -491,6 +496,11 @@
               <FileName>stm32f10x_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f10x_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWLIB\src\stm32f10x_systick.c</FilePath>
             </File>
           </Files>
         </Group>

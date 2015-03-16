@@ -55,8 +55,8 @@ void USART1_IRQHandler(void)
 		if(count<96)
 		{
 			while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)==RESET);//等待接受完成	
-			Tx_Buf[count]=(USART_ReceiveData(USART1));	
-      count++;			
+			Tx_Buf[count++]=(USART_ReceiveData(USART1));	
+      			
 			if(count==96)
 			{ 
 				count=0;
