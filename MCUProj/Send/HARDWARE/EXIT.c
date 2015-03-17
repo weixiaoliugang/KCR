@@ -73,6 +73,7 @@ void EXTI9_5_IRQHandler(void)
 			while(USART_GetFlagStatus(USART1,USART_FLAG_TC)!=SET);//等待发送结束
 		}	
   }	
+  //NRF24L01_TX_Mode();   //收到数据包改变为发送模式
 	EXTI_ClearITPendingBit(EXTI_Line8);//清除中断标志位，避免多次进入中断	
 	
 	
