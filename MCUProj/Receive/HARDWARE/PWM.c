@@ -1,5 +1,6 @@
 //项目中的定时器频率为100khz,将周期设定为20ms（舵机可用）
 #include "stm32f10x.h"
+extern u8 Is_System_Normal;
         
 u16 TIM3_CCR1_VAL=138;      //TIM3_CH1->一号舵机
 u16 TIM3_CCR2_VAL=1000;     //TIM3_CH2->二号舵机
@@ -34,7 +35,7 @@ void TIM3_Mode_Config()
 	
 	TIM_DeInit(TIM3);//缺省值配置
 	TIM_TimeBaseStructure.TIM_Period=1999;//设置pwm波的周期20MS
-  TIM_TimeBaseStructure.TIM_Prescaler=719;//TIMCLK的频率为100khz
+    TIM_TimeBaseStructure.TIM_Prescaler=719;//TIMCLK的频率为100khz
 	TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;//向上计数模式
 	TIM_TimeBaseInit(TIM3,&TIM_TimeBaseStructure);
@@ -80,7 +81,7 @@ void TIM4_GPIO_Config()
 	//
 	GPIO_InitStructure.GPIO_Pin=GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8|GPIO_Pin_9;    //GPIOB.6->TIM4_CH1,GPIOB.7->TIM4_CH2,GPIOB.8->TIM4_CH3,GPIOB.9->TIM4_CH4
 	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_AF_PP;        //复用推完输出
-  GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB,&GPIO_InitStructure);
 }
 //////////////////////////////////////初始值///////////////////////////////////////////////////////
@@ -91,7 +92,7 @@ void TIM4_Mode_Config()
 	
 	TIM_DeInit(TIM4);//缺省值配置
 	TIM_TimeBaseStructure.TIM_Period=1999;//设置pwm波的周期20MS
-  TIM_TimeBaseStructure.TIM_Prescaler=719;//TIMCLK的频率为100khz
+    TIM_TimeBaseStructure.TIM_Prescaler=719;//TIMCLK的频率为100khz
 	TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;//向上计数模式
 	TIM_TimeBaseInit(TIM4,&TIM_TimeBaseStructure);
@@ -131,15 +132,15 @@ void TIM4_Mode_Config()
 //将占空比改变为初始状态（复位值）////////////////////////////////////////////
 void Reset_Duoji()
 {
-	 TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
-   TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
-	 TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
-   TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
+    TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
+    TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
+    TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
+    TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
 
-   TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
-   TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
-	 TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
-   TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
+    TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
+    TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
+    TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
+    TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
 	
 }
 
@@ -156,15 +157,16 @@ void Control_Duoji(u8 *Control_Duoji)//解包控制舵机函数
 	 TIM4_CCR3_VAL=Control_Duoji[23];    //肩部横向   
 	 TIM4_CCR4_VAL=Control_Duoji[24];	//肩部纵向 
 	
-   TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
-   TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
-	 TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
-   TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
+     TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
+     TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
+     TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
+     TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
 
-   TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
-   TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
-	 TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
-   TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
+     TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
+     TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
+     TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
+     TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
+     Is_System_Normal=1;
 }
 
 void  TIM3_Init()

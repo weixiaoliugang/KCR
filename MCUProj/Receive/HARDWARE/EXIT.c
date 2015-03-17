@@ -14,9 +14,9 @@ void EXIT_Disable(void)//关中断
 	//GPIOG.8 中断线以及中断初始化配置   下降沿触发
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOG, GPIO_PinSource8);
 	EXTI_InitStructure.EXTI_Line=EXTI_Line8;
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; 
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //下降沿触发
-  EXTI_InitStructure.EXTI_LineCmd =DISABLE;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; 
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //下降沿触发
+    EXTI_InitStructure.EXTI_LineCmd =DISABLE;
 	EXTI_Init(&EXTI_InitStructure);
 	
  
@@ -29,9 +29,9 @@ void EXIT_Enable(void)//关中断
 	//GPIOG.8 中断线以及中断初始化配置   下降沿触发
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOG, GPIO_PinSource8);
 	EXTI_InitStructure.EXTI_Line=EXTI_Line8;
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; 
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //下降沿触发
-  EXTI_InitStructure.EXTI_LineCmd =ENABLE;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; 
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //下降沿触发
+    EXTI_InitStructure.EXTI_LineCmd =ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 	
 }
@@ -48,12 +48,12 @@ void EXIT_Init(void)
 	//GPIOG.8 中断线以及中断初始化配置   下降沿触发
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOG, GPIO_PinSource8);
 	EXTI_InitStructure.EXTI_Line=EXTI_Line8;
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; 
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //下降沿触发
-  EXTI_InitStructure.EXTI_LineCmd =ENABLE;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; 
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //下降沿触发
+    EXTI_InitStructure.EXTI_LineCmd =ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 	
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);//设置抢占优先级为1位，响应优先级为3位
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);//设置抢占优先级为1位，响应优先级为3位
 	NVIC_InitStructure.NVIC_IRQChannel=EXTI9_5_IRQn ;//配置中断向量
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0X01;//抢占优先级为0
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority=0X00;//响应优先级为0
@@ -75,7 +75,7 @@ void EXTI9_5_IRQHandler(void)
 			case 0:NRF24L01_RxPacket(Rx_Buf);count++;num++;break;
 			case 1:NRF24L01_RxPacket(Rx_Buf+32);count++;num++;break;
 			case 2:NRF24L01_RxPacket(Rx_Buf+64);count=0;Rx_Flag_Over=1;num++;break;		
-    }  		
+        }  		
 		EXTI_ClearITPendingBit(EXTI_Line8);//清除中断标志位，避免多次进入中断	
 	}
 }

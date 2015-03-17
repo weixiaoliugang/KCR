@@ -1,6 +1,8 @@
 #include "stm32f10x.h"
 #include "nrf2401l.h"
 
+
+
 extern u8 Tx_Buf[96];
 extern u8 Tx_Flag_Over;
 
@@ -65,6 +67,7 @@ void USART1_IRQHandler(void)
       }			
 		}	
 		USART_ClearITPendingBit(USART1,USART_IT_RXNE );//清除中断标志
+		
 			
   }
 }

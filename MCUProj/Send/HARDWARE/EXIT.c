@@ -3,8 +3,6 @@
 #include "NRF2401L.h"
 #include "SYSTEM.h"
 
-
-
 void EXIT_Disable(void)//关中断
 {
 	EXTI_InitTypeDef EXTI_InitStructure;//注意此结构体的中的内容
@@ -61,6 +59,7 @@ void EXIT_Init(void)
 
 void EXTI9_5_IRQHandler(void)
 {	
+	
 	u8 Respond[32];//回执信号
 	u8 count;
 	
@@ -73,7 +72,6 @@ void EXTI9_5_IRQHandler(void)
 			while(USART_GetFlagStatus(USART1,USART_FLAG_TC)!=SET);//等待发送结束
 		}	
   }	
-  //NRF24L01_TX_Mode();   //收到数据包改变为发送模式
 	EXTI_ClearITPendingBit(EXTI_Line8);//清除中断标志位，避免多次进入中断	
 	
 	
