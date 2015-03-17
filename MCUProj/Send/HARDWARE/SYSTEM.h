@@ -5,7 +5,6 @@
 void delay_ms(u32);
 void delay_us(u32);
 
-void SysTick_Init(void);
 
 #endif
 

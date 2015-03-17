@@ -1,6 +1,7 @@
 //项目中的定时器频率为100khz,将周期设定为20ms（舵机可用）
 #include "stm32f10x.h"
-        
+extern u8 System_Check;  //接受完成标志
+	
 u16 TIM3_CCR1_VAL=138;      //TIM3_CH1->一号舵机
 u16 TIM3_CCR2_VAL=1000;     //TIM3_CH2->二号舵机
 u16 TIM3_CCR3_VAL=500;      //TIM3_CH3->三号舵机
@@ -165,6 +166,9 @@ void Control_Duoji(u8 *Control_Duoji)//解包控制舵机函数
    TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
 	 TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
    TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
+	
+	 System_Check=1;//设置工作正常标志位
+	
 }
 
 void  TIM3_Init()
