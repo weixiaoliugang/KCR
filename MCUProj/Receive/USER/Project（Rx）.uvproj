@@ -502,6 +502,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\SYSTEM.c</FilePath>
             </File>
+            <File>
+              <FileName>CRC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\CRC.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
