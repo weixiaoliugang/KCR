@@ -3,14 +3,14 @@
 
 
 
-u16 GenerateCRITT(u8 *p)
+u16 GenerateCRITT(u8 *p,u8 length)
         {
             u32 uiCRCITTSum = 0xFFFF;
             u32 uiByteValue;
             int iBufferIndex;
             int iBitIndex;
 
-            for (iBufferIndex = 0;iBufferIndex < 64; iBufferIndex++)
+            for (iBufferIndex = 0;iBufferIndex < length; iBufferIndex++)
             {
                 uiByteValue = ((u32)p[iBufferIndex] << 8);
                 for (iBitIndex = 0; iBitIndex < 8; iBitIndex++)

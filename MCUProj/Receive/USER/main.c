@@ -6,6 +6,7 @@
 #include "CRC.h"
 
 u8 Rx_Buf[96];
+u8 Rx_Buf_Bak[96];
 
     //接受完成标志
 u8 Rx_Flag_Over=0;     
@@ -30,10 +31,10 @@ int main()
 		if(Rx_Flag_Over==1)
 		{   
 			Rx_Flag_Over=0;
-            CRC_Value=(u16*)(Rx_Buf+76);
-            if(*CRC_Value==GenerateCRITT(Rx_Buf+12))    //进行CRC校验
+            CRC_Value=(u16*)(Rx_Buf_Bak+76);
+            if(*CRC_Value==GenerateCRITT(Rx_Buf_Bak+12,64))    //进行CRC校验
             {    
-                switch(Rx_Buf[10])
+                switch(Rx_Buf_Bak[10])
                 { 
                     case 0x00:  //停止信号，复位舵机
                     {
@@ -55,7 +56,7 @@ int main()
                     
                     case 0x0f:    //停止信号，复位舵机
                     {
-                        Control_Duoji(Rx_Buf);
+                        Control_Duoji(Rx_Buf_Bak);
                         NRF24L01_TX_Mode();
                         delay_us(100);
                         if(Is_System_Normal)

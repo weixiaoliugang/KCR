@@ -2,7 +2,9 @@
 #include <stm32f10x.h>
 #include "NRF2401L.h"
 #include "SYSTEM.h"
+#include "string.h"
 
+extern u8 Rx_Buf_Bak[96];
 extern u8 Rx_Buf[96];
 extern u8 Rx_Flag_Over;
 extern u8 num;
@@ -72,9 +74,55 @@ void EXTI9_5_IRQHandler(void)
 	{
 		switch(count)                       //三次接受组成一帧
 		{
-			case 0:NRF24L01_RxPacket(Rx_Buf);count++;num++;break;
-			case 1:NRF24L01_RxPacket(Rx_Buf+32);count++;num++;break;
-			case 2:NRF24L01_RxPacket(Rx_Buf+64);count=0;Rx_Flag_Over=1;num++;break;		
+			case 0:
+            {
+                NRF24L01_RxPacket(Rx_Buf);
+                if((Rx_Buf[0]==0xff)&&(Rx_Buf[1]==0xff))
+                {   
+                    memcpy(Rx_Buf_Bak,Rx_Buf,32);                    
+                    count++;
+                    num++;
+                }
+                else
+                {
+                    count=0;
+                }
+                break;
+            }
+            
+			case 1:
+            {
+                NRF24L01_RxPacket(Rx_Buf+32);
+                if((Rx_Buf[32]==0x00)&&(Rx_Buf[33]==0x00))
+                {   
+                    memcpy(Rx_Buf_Bak+32,Rx_Buf+32,32);                    
+                    count++;
+                    num++;
+                    
+                }
+                else
+                {
+                    count=0;
+                }
+                break;
+            }
+            
+			case 2:
+            {
+                 NRF24L01_RxPacket(Rx_Buf+64);
+                 if((Rx_Buf[64]==0x00)&&(Rx_Buf[65]==0x00))
+                 { 
+                    memcpy(Rx_Buf_Bak+64,Rx_Buf+64,32);     
+                    count=0;
+                    num++;
+                    Rx_Flag_Over=1;       
+                 }
+                 else
+                 {
+                    count=0;
+                 }
+                 break;
+            }		
         }  		
 		EXTI_ClearITPendingBit(EXTI_Line8);//清除中断标志位，避免多次进入中断	
 	}
