@@ -2,15 +2,15 @@
 #include "stm32f10x.h"
 extern u8 Is_System_Normal;
         
-u16 TIM3_CCR1_VAL=138;      //TIM3_CH1->一号舵机
-u16 TIM3_CCR2_VAL=1000;     //TIM3_CH2->二号舵机
-u16 TIM3_CCR3_VAL=500;      //TIM3_CH3->三号舵机
-u16 TIM3_CCR4_VAL=250;      //TIM3_CH4->四号舵机
+u16 TIM3_CCR1_VAL;      //TIM3_CH1->一号舵机
+u16 TIM3_CCR2_VAL;     //TIM3_CH2->二号舵机
+u16 TIM3_CCR3_VAL;      //TIM3_CH3->三号舵机
+u16 TIM3_CCR4_VAL;      //TIM3_CH4->四号舵机
 
-u16 TIM4_CCR1_VAL=1500;     //TIM3_CH1->五号舵机
-u16 TIM4_CCR2_VAL=1000;     //TIM3_CH2->六号舵机
-u16 TIM4_CCR3_VAL=500;      //TIM3_CH3->七号舵机
-u16 TIM4_CCR4_VAL=250;      //TIM3_CH4->八号舵机
+u16 TIM4_CCR1_VAL;     //TIM3_CH1->五号舵机
+u16 TIM4_CCR2_VAL;     //TIM3_CH2->六号舵机
+u16 TIM4_CCR3_VAL;      //TIM3_CH3->七号舵机
+u16 TIM4_CCR4_VAL;      //TIM3_CH4->八号舵机
 
 
 void TIM3_GPIO_Config()
@@ -21,7 +21,7 @@ void TIM3_GPIO_Config()
 	//
 	GPIO_InitStructure.GPIO_Pin=GPIO_Pin_6|GPIO_Pin_7;    //GPIOA.6->TIM3_CH1,GPIOA.7->TIM3_CH2
 	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_AF_PP;        //复用推完输出
-  GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA,&GPIO_InitStructure);
 	
 	GPIO_InitStructure.GPIO_Pin=GPIO_Pin_0|GPIO_Pin_1;     //GPIOB.0->TIM3_CH3,GPIOB.1->TIM3_CH4
@@ -42,26 +42,26 @@ void TIM3_Mode_Config()
 	//Chnnel1通道的设置
 	TIM_OCInitStructure.TIM_OCMode=TIM_OCMode_PWM1;    //TIM_CNT<TIM_CCRx时为高电平，TIM_CNT>TIM_CCRx时为高低平，
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM3_CCR1_VAL;           //设定占空比
+	TIM_OCInitStructure.TIM_Pulse=92;           //设定占空比
 	TIM_OCInitStructure.TIM_OCPolarity=TIM_OCPolarity_High;
 	TIM_OC1Init(TIM3,&TIM_OCInitStructure);
 	
 	TIM_OC1PreloadConfig(TIM3,TIM_OCPreload_Enable);   //使能CCR1的预装在寄存器
 	//Chnnel2通道的设置
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM3_CCR2_VAL;
+	TIM_OCInitStructure.TIM_Pulse=47;
 	TIM_OC2Init(TIM3,&TIM_OCInitStructure);
  
 	TIM_OC2PreloadConfig(TIM3,TIM_OCPreload_Enable);   //使能CCR2的预装在寄存器
 	 //Chnnel3通道的设置
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM3_CCR3_VAL;
+	TIM_OCInitStructure.TIM_Pulse=108;
 	TIM_OC3Init(TIM3,&TIM_OCInitStructure);
   
 	TIM_OC3PreloadConfig(TIM3,TIM_OCPreload_Enable); //使能CCR3的预装在寄存器	
 	 //Chnnel4通道的设置
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM3_CCR4_VAL;
+	TIM_OCInitStructure.TIM_Pulse=192;
 	TIM_OC4Init(TIM3,&TIM_OCInitStructure);
   
 	TIM_OC4PreloadConfig(TIM3,TIM_OCPreload_Enable); //使能CCR4的预装在寄存器
@@ -99,26 +99,26 @@ void TIM4_Mode_Config()
 	//Chnnel1通道的设置
 	TIM_OCInitStructure.TIM_OCMode=TIM_OCMode_PWM1;    //TIM_CNT<TIM_CCRx时为高电平，TIM_CNT>TIM_CCRx时为高低平，
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM4_CCR1_VAL;           //设定占空比
+	TIM_OCInitStructure.TIM_Pulse=92;           //设定占空比
 	TIM_OCInitStructure.TIM_OCPolarity=TIM_OCPolarity_High;
 	TIM_OC1Init(TIM4,&TIM_OCInitStructure);
 	
 	TIM_OC1PreloadConfig(TIM4,TIM_OCPreload_Enable);   //使能CCR1的预装在寄存器
 	//Chnnel2通道的设置
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM4_CCR2_VAL;
+	TIM_OCInitStructure.TIM_Pulse=220;
 	TIM_OC2Init(TIM4,&TIM_OCInitStructure);
  
 	TIM_OC2PreloadConfig(TIM4,TIM_OCPreload_Enable);   //使能CCR2的预装在寄存器
 	 //Chnnel3通道的设置
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM4_CCR3_VAL;
+	TIM_OCInitStructure.TIM_Pulse=160;
 	TIM_OC3Init(TIM4,&TIM_OCInitStructure);
   
 	TIM_OC3PreloadConfig(TIM4,TIM_OCPreload_Enable); //使能CCR3的预装在寄存器	
 	 //Chnnel4通道的设置
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse=TIM4_CCR4_VAL;
+	TIM_OCInitStructure.TIM_Pulse=50;
 	TIM_OC4Init(TIM4,&TIM_OCInitStructure);
   
 	TIM_OC4PreloadConfig(TIM4,TIM_OCPreload_Enable); //使能CCR4的预装在寄存器
@@ -132,40 +132,40 @@ void TIM4_Mode_Config()
 //将占空比改变为初始状态（复位值）////////////////////////////////////////////
 void Reset_Duoji()
 {
-    TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
-    TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
-    TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
-    TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
+    TIM_SetCompare1(TIM3,92);	
+    TIM_SetCompare2(TIM3,47);	
+    TIM_SetCompare3(TIM3,108);
+    TIM_SetCompare4(TIM3,192);	
 
-    TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
-    TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
-    TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
-    TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
+    TIM_SetCompare1(TIM4,92);	
+    TIM_SetCompare2(TIM4,220);	
+    TIM_SetCompare3(TIM4,160);
+    TIM_SetCompare4(TIM4,50);
 	
 }
 
 void Control_Duoji(u8 *Control_Duoji)//解包控制舵机函数
 {
 	//左臂
-	 TIM3_CCR1_VAL=Control_Duoji[18];    //手   
-	 TIM3_CCR2_VAL=Control_Duoji[17];   //肘子   
+	 TIM3_CCR1_VAL=Control_Duoji[23];    //手   
+	 TIM3_CCR2_VAL=Control_Duoji[18];   //肘子   
 	 TIM3_CCR3_VAL=Control_Duoji[15];   //肩部横向     
-	 TIM3_CCR4_VAL=Control_Duoji[16];   //肩部纵向      
+	 TIM3_CCR4_VAL=Control_Duoji[17];   //肩部纵向      
   //右臂
-	 TIM4_CCR1_VAL=Control_Duoji[26];     //手 
-	 TIM4_CCR2_VAL=Control_Duoji[25];     //肘子 
-	 TIM4_CCR3_VAL=Control_Duoji[23];    //肩部横向   
-	 TIM4_CCR4_VAL=Control_Duoji[24];	//肩部纵向 
+	 TIM4_CCR1_VAL=Control_Duoji[36];     //手 
+	 TIM4_CCR2_VAL=Control_Duoji[31];     //肘子 
+	 TIM4_CCR3_VAL=Control_Duoji[28];    //肩部横向   
+	 TIM4_CCR4_VAL=Control_Duoji[30];	//肩部纵向 
 	
      TIM_SetCompare1(TIM3,TIM3_CCR1_VAL);	
      TIM_SetCompare2(TIM3,TIM3_CCR2_VAL);	
      TIM_SetCompare3(TIM3,TIM3_CCR3_VAL);
      TIM_SetCompare4(TIM3,TIM3_CCR4_VAL);	
 
-     TIM_SetCompare1(TIM4,TIM3_CCR1_VAL);	
-     TIM_SetCompare2(TIM4,TIM3_CCR2_VAL);	
-     TIM_SetCompare3(TIM4,TIM3_CCR3_VAL);
-     TIM_SetCompare4(TIM4,TIM3_CCR4_VAL);
+     TIM_SetCompare1(TIM4,TIM4_CCR1_VAL);	
+     TIM_SetCompare2(TIM4,TIM4_CCR2_VAL);	
+     TIM_SetCompare3(TIM4,TIM4_CCR3_VAL);
+     TIM_SetCompare4(TIM4,TIM4_CCR4_VAL);
      Is_System_Normal=1;
 }
 
